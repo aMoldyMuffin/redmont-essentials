@@ -1,0 +1,20 @@
+{
+  "kits": {
+    "Survival Starter": 1,
+    "Adventurer Kit": 3,
+    "Builder Bundle": 2,
+    "Custom Kit": 2
+  },
+  "categories": {
+    "Ores & Ingots": 3,
+    "Farming Goods": 1,
+    "Building Blocks": 1,
+    "Food & Supplies": 1,
+    "Tools": 2,
+    "Decor Items": 1,
+    "Bulk Resources": 2,
+    "Other": 1
+  },
+  "defaultWeight": 1,
+  "sellMultiplier": 1.25
+}

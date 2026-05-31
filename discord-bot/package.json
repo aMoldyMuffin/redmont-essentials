@@ -1,7 +1,7 @@
 {
-  "name": "redmont-essentials-bot",
-  "version": "1.0.0",
-  "description": "Discord bot to connect Redmont Essentials website with your server",
+  "name": "monty",
+  "version": "2.0.0",
+  "description": "Monty — Redmont Essentials Discord bot for orders, claims & leaderboards",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "better-sqlite3": "^11.8.1",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.7"
   }

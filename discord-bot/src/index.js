@@ -6,121 +6,209 @@ import {
   Routes,
   SlashCommandBuilder,
   EmbedBuilder,
+  ActivityType,
 } from 'discord.js';
+import { startApiServer } from './api.js';
+import { claimOrder, getLeaderboard, getStaffStats, getOpenOrderCount } from './db.js';
+import { buildOrderEmbed, buildClaimButton } from './orders.js';
 
 const token = process.env.DISCORD_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
 const clientId = process.env.DISCORD_CLIENT_ID;
+const staffRoleId = process.env.STAFF_ROLE_ID;
+const ordersChannelId = process.env.ORDERS_CHANNEL_ID;
 const websiteUrl = process.env.WEBSITE_URL || 'https://example.com';
+const apiPort = Number(process.env.PORT || process.env.API_PORT || 3847);
+const apiSecret = process.env.MONTY_API_SECRET;
 
 if (!token || !guildId || !clientId) {
-  console.error('Missing DISCORD_TOKEN, DISCORD_GUILD_ID, or DISCORD_CLIENT_ID in .env');
+  console.error('Missing DISCORD_TOKEN, DISCORD_GUILD_ID, or DISCORD_CLIENT_ID');
   process.exit(1);
 }
 
+if (!ordersChannelId) {
+  console.warn('Warning: ORDERS_CHANNEL_ID not set — website orders will fail until configured.');
+}
+
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 });
 
-// ── Slash commands ──
+function isStaff(member) {
+  if (!member) return false;
+  if (member.permissions.has('ManageMessages')) return true;
+  if (staffRoleId && member.roles.cache.has(staffRoleId)) return true;
+  return false;
+}
+
 const commands = [
   new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('Get Redmont Essentials shop info and website link'),
+    .setDescription('Redmont Essentials shop info'),
   new SlashCommandBuilder()
     .setName('kits')
-    .setDescription('List available starter gear kits'),
+    .setDescription('List starter gear kits'),
   new SlashCommandBuilder()
-    .setName('stock')
-    .setDescription('Post a stock update to the website channel (staff only)')
-    .addStringOption((opt) =>
-      opt.setName('message').setDescription('Stock update message').setRequired(true)
-    ),
-].map((cmd) => cmd.toJSON());
+    .setName('leaderboard')
+    .setDescription('Staff leaderboard by order weight points'),
+  new SlashCommandBuilder()
+    .setName('mystats')
+    .setDescription('Your order claim stats'),
+  new SlashCommandBuilder()
+    .setName('orders')
+    .setDescription('How many orders are waiting to be claimed'),
+].map((c) => c.toJSON());
 
 async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(token);
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-  console.log('Slash commands registered.');
+  console.log('Monty slash commands registered.');
+}
+
+function formatLeaderboard(rows) {
+  if (!rows.length) return 'No claims yet — be the first to claim an order!';
+
+  return rows
+    .map((row, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `**${i + 1}.**`;
+      return `${medal} **${row.username}** — ${row.total_weight} pts (${row.orders_claimed} orders)`;
+    })
+    .join('\n');
 }
 
 client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`Monty is online as ${client.user.tag}`);
+  client.user.setActivity('Redmont Essentials orders', { type: ActivityType.Watching });
+
+  if (apiSecret && ordersChannelId) {
+    startApiServer(client, { port: apiPort, secret: apiSecret, ordersChannelId });
+  } else {
+    console.warn('Monty API not started — set MONTY_API_SECRET and ORDERS_CHANNEL_ID');
+  }
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  try {
+    if (interaction.isButton() && interaction.customId.startsWith('monty_claim:')) {
+      const orderId = interaction.customId.split(':')[1];
 
-  if (interaction.commandName === 'shop') {
-    const embed = new EmbedBuilder()
-      .setColor(0xd4af37)
-      .setTitle('Redmont Essentials')
-      .setDescription('Everything you need to get started on Democracy Craft.')
-      .addFields(
-        { name: 'Gear Kits', value: 'Survival Starter · Adventurer · Builder Bundle', inline: false },
-        { name: 'Buy & Sell', value: 'General goods via in-game chest shops (`b: Redmont Essentials`)', inline: false },
-        { name: 'Website', value: websiteUrl, inline: false },
-      )
-      .setFooter({ text: 'Order custom kits here on Discord!' });
+      if (!isStaff(interaction.member)) {
+        await interaction.reply({
+          content: 'Only staff can claim orders.',
+          ephemeral: true,
+        });
+        return;
+      }
 
-    await interaction.reply({ embeds: [embed] });
-  }
+      const claimed = claimOrder(orderId, interaction.user.id, interaction.user.username);
+      if (!claimed) {
+        await interaction.reply({
+          content: 'This order was already claimed or does not exist.',
+          ephemeral: true,
+        });
+        return;
+      }
 
-  if (interaction.commandName === 'kits') {
-    const embed = new EmbedBuilder()
-      .setColor(0xd4af37)
-      .setTitle('Starter Gear Kits')
-      .addFields(
-        {
-          name: '🎒 Survival Starter',
-          value: 'Stone tools, food, torches & building blocks',
-          inline: false,
-        },
-        {
-          name: '⚔️ Adventurer Kit (Popular)',
-          value: 'Iron armor, full tool set, crafting table, furnace & supplies',
-          inline: false,
-        },
-        {
-          name: '🏗️ Builder Bundle',
-          value: 'Common blocks, glass, doors & decor basics',
-          inline: false,
-        },
-      )
-      .setFooter({ text: 'DM staff or open a ticket to order. Prices on request.' });
-
-    await interaction.reply({ embeds: [embed] });
-  }
-
-  if (interaction.commandName === 'stock') {
-    if (!interaction.memberPermissions?.has('ManageMessages')) {
-      await interaction.reply({ content: 'Staff only.', ephemeral: true });
+      await interaction.update({
+        content: `✅ Order **#${orderId}** claimed by ${interaction.user}`,
+        embeds: [buildOrderEmbed(claimed, { claimed: true })],
+        components: [buildClaimButton(orderId, true)],
+      });
       return;
     }
 
-    const message = interaction.options.getString('message', true);
-    const channelId = process.env.STOCK_CHANNEL_ID;
+    if (!interaction.isChatInputCommand()) return;
 
-    const embed = new EmbedBuilder()
-      .setColor(0x22c55e)
-      .setTitle('📦 Stock Update')
-      .setDescription(message)
-      .setTimestamp()
-      .setFooter({ text: 'Redmont Essentials' });
-
-    if (channelId) {
-      const channel = await client.channels.fetch(channelId).catch(() => null);
-      if (channel?.isTextBased()) {
-        await channel.send({ embeds: [embed] });
-      }
+    if (interaction.commandName === 'shop') {
+      await interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xd4af37)
+            .setTitle('Redmont Essentials')
+            .setDescription('Everything you need to get started on Democracy Craft.')
+            .addFields(
+              { name: 'Website', value: websiteUrl, inline: false },
+              { name: 'Order online', value: `${websiteUrl}/order.html`, inline: false },
+            )
+            .setFooter({ text: 'Monty · Redmont Essentials' }),
+        ],
+      });
+      return;
     }
 
-    await interaction.reply({ content: 'Stock update posted.', ephemeral: true });
+    if (interaction.commandName === 'kits') {
+      await interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xd4af37)
+            .setTitle('Starter Gear Kits')
+            .addFields(
+              { name: '🎒 Survival Starter (1 pt)', value: 'Stone tools, food & basics', inline: false },
+              { name: '⚔️ Adventurer Kit (3 pts)', value: 'Iron armor, tools & supplies', inline: false },
+              { name: '🏗️ Builder Bundle (2 pts)', value: 'Blocks, glass & decor', inline: false },
+            ),
+        ],
+      });
+      return;
+    }
 
-    // Future: POST to a Cloudflare Worker API to sync with the website live feed
+    if (interaction.commandName === 'leaderboard') {
+      const rows = getLeaderboard(10);
+      await interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xd4af37)
+            .setTitle('🏆 Staff Leaderboard')
+            .setDescription(formatLeaderboard(rows))
+            .setFooter({ text: 'Ranked by weighted order points · Monty' }),
+        ],
+      });
+      return;
+    }
+
+    if (interaction.commandName === 'mystats') {
+      const stats = getStaffStats(interaction.user.id);
+      if (!stats) {
+        await interaction.reply({
+          content: 'You have not claimed any orders yet. Claim one from the orders channel!',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const rank = getLeaderboard(100).findIndex((r) => r.user_id === interaction.user.id) + 1;
+      await interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x5865f2)
+            .setTitle('📊 Your Stats')
+            .addFields(
+              { name: 'Orders claimed', value: `${stats.orders_claimed}`, inline: true },
+              { name: 'Total points', value: `${stats.total_weight}`, inline: true },
+              { name: 'Rank', value: rank ? `#${rank}` : 'Unranked', inline: true },
+            ),
+        ],
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.commandName === 'orders') {
+      const open = getOpenOrderCount();
+      await interaction.reply({
+        content: open
+          ? `📬 **${open}** order${open === 1 ? '' : 's'} waiting to be claimed in <#${ordersChannelId}>`
+          : '✅ No open orders — all caught up!',
+        ephemeral: true,
+      });
+    }
+  } catch (err) {
+    console.error('Interaction error:', err);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: 'Something went wrong.', ephemeral: true }).catch(() => {});
+    } else {
+      await interaction.reply({ content: 'Something went wrong.', ephemeral: true }).catch(() => {});
+    }
   }
 });
 

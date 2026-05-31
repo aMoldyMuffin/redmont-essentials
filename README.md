@@ -68,95 +68,47 @@ Your site will be at `https://YOUR_USERNAME.github.io/redmont-essentials/`.
 
 > **Note:** If using a project site (not user site), update asset paths or use a custom domain.
 
-## Website orders → Discord
+## Website orders → Monty (Discord bot)
 
-Customers can submit orders on the site. A **Cloudflare Pages Function** (`functions/api/order.js`) sends each order to a Discord channel. **You do not need a bot running for this** — a Discord webhook is enough.
+Orders go through **Monty**, your Discord bot — not a webhook. Monty posts orders with a **Claim** button, tracks weighted points, and runs `/leaderboard`.
 
-### 1. Create a Discord webhook
+Full setup guide: [`discord-bot/README.md`](discord-bot/README.md)
 
-1. In Discord, open the **orders channel** (create one like `#website-orders`)
-2. Click the gear icon → **Integrations** → **Webhooks** → **New Webhook**
-3. Name it `Redmont Essentials Orders`
-4. **Copy Webhook URL** (keep this secret)
+### Quick overview
 
-### 2. Add it to Cloudflare
+1. **Create Monty** in the [Discord Developer Portal](https://discord.com/developers/applications) and invite to your server
+2. **Deploy Monty** on [Railway](https://railway.app) (always-on, free tier works)
+3. **Cloudflare variables** (Settings → Variables and Secrets):
 
-1. [Cloudflare Dashboard](https://dash.cloudflare.com) → your Pages project
-2. **Settings** → **Environment variables**
-3. Add a variable:
-   - **Name:** `DISCORD_WEBHOOK_URL`
-   - **Value:** your webhook URL
-4. Save, then **Deployments** → **Retry deployment** (needed so the function picks up the variable)
+| Name | Value |
+|------|--------|
+| `MONTY_API_URL` | Your Railway URL, e.g. `https://monty-production.up.railway.app` |
+| `MONTY_API_SECRET` | Same random secret in Monty's `.env` |
 
-### 3. Test
+4. **Redeploy** Cloudflare after saving
 
-1. Open your live site → **Order** section
-2. Submit a test order with your Minecraft username
-3. Check your Discord orders channel — you should see an embed within a few seconds
+### Weighted leaderboard
 
-> **Note:** Orders only work on **Cloudflare Pages** (not plain GitHub Pages or local preview), because the `/api/order` endpoint runs as a Cloudflare Function.
+Edit `discord-bot/config/weights.json` to set points per kit/item. Harder orders = more points when staff claims them.
 
-### Optional: full Discord bot
-
-The bot in `discord-bot/` is separate — useful for `/shop`, `/kits`, and `/stock` commands. Order posting uses the webhook above and does not require the bot to be online.
-
-## Discord bot setup
-
-The bot lives in `discord-bot/` and connects your Discord server to the business.
-
-### 1. Create a Discord application
-
-1. [Discord Developer Portal](https://discord.com/developers/applications) → New Application
-2. **Bot** tab → Add Bot → copy the token
-3. **OAuth2 → URL Generator** → scopes: `bot`, `applications.commands` → permissions: Send Messages, Embed Links
-4. Invite the bot to your server
-
-### 2. Configure
-
-```bash
-cd discord-bot
-cp .env.example .env
-# Fill in DISCORD_TOKEN, DISCORD_GUILD_ID, DISCORD_CLIENT_ID
-npm install
-npm start
-```
-
-### 3. Commands
-
-| Command | Description |
-|---------|-------------|
-| `/shop` | Shop info + website link |
-| `/kits` | Lists gear kits |
-| `/stock` | Staff-only stock update (posts to configured channel) |
-
-### Hosting the bot
-
-The bot needs a always-on Node process. Free/cheap options:
-
-- **Railway** or **Render** — deploy the `discord-bot` folder
-- **A VPS** — run with `pm2` or systemd
-- **Your PC** — fine for testing with `npm start`
-
-## Future upgrades
-
-1. **Live stock feed** — Cloudflare KV + bot `/stock` command
-2. **Order status** — bot reacts to orders or DMs customers when ready
-3. **Price list** — JSON or API synced from in-game shop data
+| Command | What it does |
+|---------|----------------|
+| `/leaderboard` | Top staff by points |
+| `/mystats` | Your stats |
+| `/orders` | Open orders count |
 
 ## Project structure
 
 ```
 redmont-essentials/
-├── index.html              # Main page + order form
-├── css/styles.css
-├── js/
-│   ├── config.js
-│   └── main.js
-├── functions/api/order.js  # Posts orders to Discord (Cloudflare only)
-├── logo.png
-├── discord-bot/            # Optional slash-command bot
-├── wrangler.toml
-└── .github/workflows/
+├── index.html
+├── order.html
+├── functions/api/order.js  # Forwards orders to Monty
+├── discord-bot/            # Monty — claims, weights, leaderboard
+│   ├── config/weights.json
+│   └── src/
+├── css/  js/
+└── logo.png
 ```
 
 ## Customize content

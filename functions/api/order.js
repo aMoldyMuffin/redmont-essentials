@@ -1,6 +1,6 @@
 /**
- * POST /api/order — forwards website orders to a Discord channel via webhook.
- * Set DISCORD_WEBHOOK_URL in Cloudflare Pages → Settings → Variables and Secrets.
+ * POST /api/order — forwards to Monty bot API
+ * Set MONTY_API_URL and MONTY_API_SECRET in Cloudflare Variables and Secrets
  */
 
 const ORDER_TYPES = new Set(['Gear Kit', 'Buy Items', 'Sell Items', 'Other']);
@@ -24,8 +24,17 @@ function isValidIgn(ign) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.DISCORD_WEBHOOK_URL) {
-    return json({ error: 'Orders are not configured yet.' }, 503);
+  const montyUrl = env.MONTY_API_URL;
+  const montySecret = env.MONTY_API_SECRET;
+
+  if (!montyUrl || !montySecret) {
+    return json(
+      {
+        error:
+          'Monty is not connected yet. Staff: deploy the bot and set MONTY_API_URL + MONTY_API_SECRET in Cloudflare.',
+      },
+      503
+    );
   }
 
   let body;
@@ -57,40 +66,29 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Please select or describe what you need.' }, 400);
   }
 
-  const embed = {
-    title: '🛒 New Website Order',
-    color: 0xd4af37,
-    fields: [
-      { name: 'Minecraft IGN', value: ign, inline: true },
-      { name: 'Order Type', value: orderType, inline: true },
-      { name: 'Details', value: item, inline: false },
-    ],
-    footer: { text: 'Redmont Essentials · Website Order' },
-    timestamp: new Date().toISOString(),
-  };
-
-  if (discord) {
-    embed.fields.push({ name: 'Discord', value: discord, inline: true });
-  }
-
-  if (notes) {
-    embed.fields.push({ name: 'Notes', value: notes, inline: false });
-  }
-
-  const webhookRes = await fetch(`${env.DISCORD_WEBHOOK_URL}?wait=true`, {
+  const montyRes = await fetch(`${montyUrl.replace(/\/$/, '')}/api/order`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: 'Redmont Essentials',
-      embeds: [embed],
-    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${montySecret}`,
+    },
+    body: JSON.stringify({ ign, orderType, item, notes, discord }),
   });
 
-  if (!webhookRes.ok) {
-    return json({ error: 'Could not send order to Discord. Try again or order on Discord.' }, 502);
+  const data = await montyRes.json().catch(() => ({}));
+
+  if (!montyRes.ok) {
+    return json(
+      { error: data.error || 'Monty could not process the order. Try Discord instead.' },
+      montyRes.status >= 500 ? 502 : montyRes.status
+    );
   }
 
-  return json({ ok: true, message: 'Order sent! We will contact you in-game or on Discord.' });
+  return json({
+    ok: true,
+    message: data.message || 'Order sent! Staff will claim it on Discord.',
+    orderId: data.orderId,
+  });
 }
 
 export async function onRequestOptions() {
