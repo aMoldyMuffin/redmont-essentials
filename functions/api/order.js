@@ -1,14 +1,7 @@
 /**
  * POST /api/order — forwards website orders to a Discord channel via webhook.
- * Set DISCORD_WEBHOOK_URL in Cloudflare Pages → Settings → Environment variables.
+ * Set DISCORD_WEBHOOK_URL in Cloudflare Pages → Settings → Variables and Secrets.
  */
-
-const KITS = new Set([
-  'Survival Starter',
-  'Adventurer Kit',
-  'Builder Bundle',
-  'Custom / Other',
-]);
 
 const ORDER_TYPES = new Set(['Gear Kit', 'Buy Items', 'Sell Items', 'Other']);
 
@@ -47,7 +40,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   const ign = cleanText(body.ign, 16);
-  const kit = cleanText(body.kit, 40);
+  const item = cleanText(body.item || body.kit, 200);
   const orderType = cleanText(body.orderType, 24);
   const notes = cleanText(body.notes, 500);
   const discord = cleanText(body.discord, 64);
@@ -56,12 +49,12 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Enter a valid Minecraft username (3–16 characters).' }, 400);
   }
 
-  if (!KITS.has(kit)) {
-    return json({ error: 'Please select a valid kit.' }, 400);
-  }
-
   if (!ORDER_TYPES.has(orderType)) {
     return json({ error: 'Please select a valid order type.' }, 400);
+  }
+
+  if (!item) {
+    return json({ error: 'Please select or describe what you need.' }, 400);
   }
 
   const embed = {
@@ -70,7 +63,7 @@ export async function onRequestPost({ request, env }) {
     fields: [
       { name: 'Minecraft IGN', value: ign, inline: true },
       { name: 'Order Type', value: orderType, inline: true },
-      { name: 'Kit / Item', value: kit, inline: true },
+      { name: 'Details', value: item, inline: false },
     ],
     footer: { text: 'Redmont Essentials · Website Order' },
     timestamp: new Date().toISOString(),

@@ -1,0 +1,262 @@
+/**
+ * Order page — dynamic fields & chip selectors
+ */
+(function () {
+  'use strict';
+
+  const config = typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG : {};
+
+  const ORDER_TYPES = [
+    { id: 'Gear Kit', label: 'Gear Kit', icon: '🎒', desc: 'Starter kits for new players' },
+    { id: 'Buy Items', label: 'Buy Items', icon: '🛒', desc: 'Purchase goods from our shop' },
+    { id: 'Sell Items', label: 'Sell Items', icon: '💰', desc: 'Sell materials to us' },
+    { id: 'Other', label: 'Other', icon: '💬', desc: 'Custom request' },
+  ];
+
+  const KITS = [
+    { id: 'Survival Starter', desc: 'Tools, food & basics' },
+    { id: 'Adventurer Kit', desc: 'Armor, tools & supplies' },
+    { id: 'Builder Bundle', desc: 'Blocks & decor' },
+    { id: 'Custom Kit', desc: 'Tell us what you need' },
+  ];
+
+  const SHOP_CATEGORIES = [
+    'Ores & Ingots',
+    'Farming Goods',
+    'Building Blocks',
+    'Food & Supplies',
+    'Tools',
+    'Decor Items',
+    'Bulk Resources',
+    'Other',
+  ];
+
+  const form = document.getElementById('orderForm');
+  if (!form) return;
+
+  const orderTypeInput = document.getElementById('orderTypeInput');
+  const itemInput = document.getElementById('itemInput');
+  const typeGrid = document.getElementById('orderTypeGrid');
+  const detailPanel = document.getElementById('orderDetailPanel');
+  const detailLabel = document.getElementById('orderDetailLabel');
+  const detailHint = document.getElementById('orderDetailHint');
+  const orderStatus = document.getElementById('orderStatus');
+  const orderSubmit = document.getElementById('orderSubmit');
+  const successScreen = document.getElementById('orderSuccess');
+
+  let selectedType = 'Gear Kit';
+  let selectedItems = new Set();
+
+  function renderTypeGrid() {
+    typeGrid.innerHTML = ORDER_TYPES.map(
+      (t) => `
+        <button type="button" class="choice-card ${t.id === selectedType ? 'selected' : ''}" data-type="${t.id}">
+          <span class="choice-icon">${t.icon}</span>
+          <span class="choice-label">${t.label}</span>
+          <span class="choice-desc">${t.desc}</span>
+        </button>
+      `
+    ).join('');
+
+    typeGrid.querySelectorAll('.choice-card').forEach((btn) => {
+      btn.addEventListener('click', () => setOrderType(btn.dataset.type));
+    });
+  }
+
+  function renderDetailPanel() {
+    selectedItems.clear();
+    detailPanel.classList.remove('visible');
+    void detailPanel.offsetWidth;
+    detailPanel.classList.add('visible');
+
+    if (selectedType === 'Gear Kit') {
+      detailLabel.textContent = 'Choose a kit';
+      detailHint.textContent = 'Select the starter package you want';
+      detailPanel.innerHTML = `
+        <div class="chip-grid chip-grid-kits" id="detailOptions">
+          ${KITS.map(
+            (k) => `
+              <button type="button" class="chip chip-lg" data-value="${k.id}">
+                <span class="chip-title">${k.id}</span>
+                <span class="chip-sub">${k.desc}</span>
+              </button>
+            `
+          ).join('')}
+        </div>
+      `;
+      bindSingleSelect(detailPanel.querySelector('#detailOptions'));
+    } else if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
+      detailLabel.textContent = selectedType === 'Buy Items' ? 'What do you want to buy?' : 'What are you selling?';
+      detailHint.textContent = 'Pick one or more — tap again to deselect';
+      detailPanel.innerHTML = `
+        <div class="chip-grid" id="detailOptions">
+          ${SHOP_CATEGORIES.map((c) => `<button type="button" class="chip" data-value="${c}">${c}</button>`).join('')}
+        </div>
+        <div class="form-row form-row-spaced">
+          <label for="customItem">Specific items <span class="optional">(optional)</span></label>
+          <input type="text" id="customItem" maxlength="120" placeholder="e.g. 2 stacks of iron, wheat, oak logs…" />
+        </div>
+      `;
+      bindMultiSelect(detailPanel.querySelector('#detailOptions'));
+    } else {
+      detailLabel.textContent = 'Describe your request';
+      detailHint.textContent = 'Tell us what you need and we will get back to you';
+      detailPanel.innerHTML = `
+        <div class="form-row">
+          <textarea id="otherRequest" rows="4" maxlength="200" placeholder="What can we help you with?" required></textarea>
+        </div>
+      `;
+    }
+
+    syncItemInput();
+  }
+
+  function bindSingleSelect(container) {
+    container.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        container.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        selectedItems.clear();
+        selectedItems.add(chip.dataset.value);
+        syncItemInput();
+      });
+    });
+  }
+
+  function bindMultiSelect(container) {
+    container.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const val = chip.dataset.value;
+        if (selectedItems.has(val)) {
+          selectedItems.delete(val);
+          chip.classList.remove('selected');
+        } else {
+          selectedItems.add(val);
+          chip.classList.add('selected');
+        }
+        syncItemInput();
+      });
+    });
+  }
+
+  function syncItemInput() {
+    if (selectedType === 'Other') {
+      const other = document.getElementById('otherRequest');
+      itemInput.value = other?.value.trim() || '';
+      return;
+    }
+
+    if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
+      const custom = document.getElementById('customItem')?.value.trim();
+      const cats = [...selectedItems];
+      if (cats.length && custom) itemInput.value = `${cats.join(', ')} — ${custom}`;
+      else if (cats.length) itemInput.value = cats.join(', ');
+      else itemInput.value = custom || '';
+      return;
+    }
+
+    itemInput.value = selectedItems.size ? [...selectedItems][0] : '';
+  }
+
+  function setOrderType(type) {
+    if (selectedType === type) return;
+    selectedType = type;
+    orderTypeInput.value = type;
+    typeGrid.querySelectorAll('.choice-card').forEach((c) => {
+      c.classList.toggle('selected', c.dataset.type === type);
+    });
+    renderDetailPanel();
+  }
+
+  function preselectFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    const item = params.get('item');
+
+    if (type && ORDER_TYPES.some((t) => t.id === type)) {
+      selectedType = type;
+      orderTypeInput.value = type;
+    }
+
+    renderTypeGrid();
+    renderDetailPanel();
+
+    if (item) {
+      requestAnimationFrame(() => {
+        if (selectedType === 'Gear Kit') {
+          const chip = detailPanel.querySelector(`[data-value="${item}"]`);
+          if (chip) chip.click();
+        } else if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
+          item.split(',').forEach((part) => {
+            const chip = detailPanel.querySelector(`[data-value="${part.trim()}"]`);
+            if (chip) chip.click();
+          });
+          const custom = document.getElementById('customItem');
+          if (custom && !detailPanel.querySelector(`[data-value="${item.trim()}"]`)) {
+            custom.value = item;
+            syncItemInput();
+          }
+        } else {
+          const other = document.getElementById('otherRequest');
+          if (other) other.value = item;
+          syncItemInput();
+        }
+      });
+    }
+  }
+
+  detailPanel.addEventListener('input', (e) => {
+    if (e.target.matches('#customItem, #otherRequest')) syncItemInput();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    syncItemInput();
+
+    orderStatus.textContent = '';
+    orderStatus.className = 'order-status';
+
+    if (!itemInput.value.trim()) {
+      orderStatus.textContent = 'Please select or describe what you need.';
+      orderStatus.classList.add('error');
+      detailPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const formData = new FormData(form);
+    const payload = {
+      ign: formData.get('ign'),
+      orderType: orderTypeInput.value,
+      item: itemInput.value.trim(),
+      discord: formData.get('discord'),
+      notes: formData.get('notes'),
+      website: formData.get('website'),
+    };
+
+    orderSubmit.disabled = true;
+    orderSubmit.classList.add('loading');
+
+    try {
+      const res = await fetch(config.orderApiUrl || '/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again or order on Discord.');
+
+      form.hidden = true;
+      document.querySelector('.order-page-intro')?.classList.add('hidden');
+      successScreen.hidden = false;
+      successScreen.classList.add('visible');
+    } catch (err) {
+      orderStatus.textContent = err.message;
+      orderStatus.classList.add('error');
+    } finally {
+      orderSubmit.disabled = false;
+      orderSubmit.classList.remove('loading');
+    }
+  });
+
+  preselectFromUrl();
+})();
