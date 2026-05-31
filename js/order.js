@@ -243,7 +243,15 @@
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again or order on Discord.');
+      if (!res.ok) {
+        if (res.status === 503) {
+          const discordUrl = config.discordInviteUrl || 'https://discord.gg/YEK4K2cY7n';
+          orderStatus.innerHTML = `Online orders aren't connected yet. <a href="${discordUrl}" target="_blank" rel="noopener">Order on Discord</a> instead.`;
+          orderStatus.classList.add('error');
+          return;
+        }
+        throw new Error(data.error || 'Something went wrong. Try again or order on Discord.');
+      }
 
       form.hidden = true;
       document.querySelector('.order-page-intro')?.classList.add('hidden');

@@ -945,8 +945,10 @@ body {
   text-align: center;
 }
 
-.order-status.success { color: #4ade80; }
-.order-status.error { color: #f87171; }
+.order-status.error a {
+  color: var(--gold-400);
+  font-weight: 600;
+}
 
 .order-success {
   text-align: center;
@@ -1064,13 +1066,14 @@ body {
 .about-features {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.35rem;
 }
 
 .feature {
   display: flex;
-  gap: 1.25rem;
-  padding: 1.5rem;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.65rem 1.75rem;
   background: var(--navy-800);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1083,23 +1086,34 @@ body {
 }
 
 .feature-num {
+  flex-shrink: 0;
+  min-width: 2.25rem;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   font-weight: 800;
   color: var(--gold-500);
-  opacity: 0.5;
-  line-height: 1;
+  opacity: 0.55;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.feature > div {
+  flex: 1;
+  min-width: 0;
 }
 
 .feature h4 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 .feature p {
-  font-size: 0.875rem;
+  font-size: 0.925rem;
   color: var(--white-dim);
+  line-height: 1.55;
 }
 
 /* ── Discord ── */
