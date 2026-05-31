@@ -25,6 +25,7 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="navLinks">
+        <li><a href="#order">Order</a></li>
         <li><a href="#kits">Gear Kits</a></li>
         <li><a href="#trade">Buy &amp; Sell</a></li>
         <li><a href="#about">About</a></li>
@@ -96,7 +97,7 @@
               <li>Starter food bundle</li>
               <li>Torch &amp; building blocks</li>
             </ul>
-            <a href="#discord" class="btn btn-card">Order on Discord</a>
+            <a href="#order" class="btn btn-card" data-kit="Survival Starter">Order Now</a>
           </article>
           <article class="card kit-card featured reveal reveal-delay">
             <div class="card-badge">Most Popular</div>
@@ -109,7 +110,7 @@
               <li>Crafting table &amp; furnace</li>
               <li>Food &amp; torches</li>
             </ul>
-            <a href="#discord" class="btn btn-primary btn-card">Order on Discord</a>
+            <a href="#order" class="btn btn-primary btn-card" data-kit="Adventurer Kit">Order Now</a>
           </article>
           <article class="card kit-card reveal reveal-delay-2">
             <div class="card-icon">🏗️</div>
@@ -120,10 +121,75 @@
               <li>Glass &amp; doors</li>
               <li>Interior decor basics</li>
             </ul>
-            <a href="#discord" class="btn btn-card">Order on Discord</a>
+            <a href="#order" class="btn btn-card" data-kit="Builder Bundle">Order Now</a>
           </article>
         </div>
-        <p class="section-note reveal">Prices vary — check Discord or visit our in-game shop for current rates.</p>
+        <p class="section-note reveal">Prices vary — order below or visit our in-game shop for current rates.</p>
+      </div>
+    </section>
+
+    <!-- Order -->
+    <section class="section section-order" id="order">
+      <div class="container">
+        <div class="order-layout reveal">
+          <div class="order-intro">
+            <span class="section-tag">Place an Order</span>
+            <h2>Order online</h2>
+            <p>
+              Fill out the form and your order goes straight to our Discord orders channel.
+              We will prepare your kit and contact you in-game or on Discord.
+            </p>
+            <ul class="order-steps">
+              <li>Submit your Minecraft username and what you need</li>
+              <li>Staff sees the order instantly on Discord</li>
+              <li>Meet us in-game or get a DM when it is ready</li>
+            </ul>
+          </div>
+
+          <form class="order-form" id="orderForm" novalidate>
+            <div class="form-row">
+              <label for="orderIgn">Minecraft Username</label>
+              <input type="text" id="orderIgn" name="ign" required maxlength="16" autocomplete="username" placeholder="Your IGN" />
+            </div>
+
+            <div class="form-row">
+              <label for="orderType">Order Type</label>
+              <select id="orderType" name="orderType" required>
+                <option value="Gear Kit">Gear Kit</option>
+                <option value="Buy Items">Buy Items</option>
+                <option value="Sell Items">Sell Items</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="orderKit">Kit / Item</label>
+              <select id="orderKit" name="kit" required>
+                <option value="Survival Starter">Survival Starter</option>
+                <option value="Adventurer Kit">Adventurer Kit</option>
+                <option value="Builder Bundle">Builder Bundle</option>
+                <option value="Custom / Other">Custom / Other</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="orderDiscord">Discord Username <span class="optional">(optional)</span></label>
+              <input type="text" id="orderDiscord" name="discord" maxlength="64" placeholder="e.g. username" />
+            </div>
+
+            <div class="form-row">
+              <label for="orderNotes">Notes <span class="optional">(optional)</span></label>
+              <textarea id="orderNotes" name="notes" rows="3" maxlength="500" placeholder="Quantity, items to sell, when you are online, etc."></textarea>
+            </div>
+
+            <input type="text" name="website" class="order-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+            <button type="submit" class="btn btn-primary btn-lg order-submit" id="orderSubmit">
+              Submit Order
+            </button>
+            <p class="order-status" id="orderStatus" role="status" aria-live="polite"></p>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -219,7 +285,7 @@
             <h2>Join our Discord</h2>
             <p>
               Orders, support, stock updates, and community — everything runs through our Discord server.
-              A website bot is coming soon to sync live shop info right here.
+              Website orders are posted to our staff channel automatically.
             </p>
             <div class="discord-actions">
               <a href="https://discord.gg/YEK4K2cY7n" class="btn btn-primary btn-lg" id="discordInvite" target="_blank" rel="noopener noreferrer">
@@ -245,6 +311,7 @@
         <p>Everything you need to get started.</p>
       </div>
       <div class="footer-links">
+        <a href="#order">Order</a>
         <a href="#kits">Gear Kits</a>
         <a href="#trade">Buy &amp; Sell</a>
         <a href="#about">About</a>

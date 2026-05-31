@@ -9,6 +9,8 @@ const SITE_CONFIG = {
   // Optional: in-game shop location shown in future bot integration
   shopLocation: 'Redmont — ask on Discord for directions',
 
-  // Business name as registered in-game (/db create)
+  // Order form API (Cloudflare Pages Function when deployed)
+  orderApiUrl: '/api/order',
+
   inGameCompanyName: 'Redmont Essentials',
 };

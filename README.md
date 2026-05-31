@@ -8,7 +8,8 @@ Website for **Redmont Essentials** — a Democracy Craft in-game business sellin
 
 | Part | Description |
 |------|-------------|
-| **Website** | Modern single-page site with Gear Kits, Buy & Sell, About, and Discord sections |
+| **Website** | Modern single-page site with gear kits, order form, buy & sell, and Discord |
+| **Order API** | Cloudflare Pages Function posts orders to a Discord channel |
 | **Discord bot** | Optional bot with `/shop`, `/kits`, and `/stock` commands |
 | **Deploy configs** | Ready for Cloudflare Pages or GitHub Pages |
 
@@ -67,6 +68,38 @@ Your site will be at `https://YOUR_USERNAME.github.io/redmont-essentials/`.
 
 > **Note:** If using a project site (not user site), update asset paths or use a custom domain.
 
+## Website orders → Discord
+
+Customers can submit orders on the site. A **Cloudflare Pages Function** (`functions/api/order.js`) sends each order to a Discord channel. **You do not need a bot running for this** — a Discord webhook is enough.
+
+### 1. Create a Discord webhook
+
+1. In Discord, open the **orders channel** (create one like `#website-orders`)
+2. Click the gear icon → **Integrations** → **Webhooks** → **New Webhook**
+3. Name it `Redmont Essentials Orders`
+4. **Copy Webhook URL** (keep this secret)
+
+### 2. Add it to Cloudflare
+
+1. [Cloudflare Dashboard](https://dash.cloudflare.com) → your Pages project
+2. **Settings** → **Environment variables**
+3. Add a variable:
+   - **Name:** `DISCORD_WEBHOOK_URL`
+   - **Value:** your webhook URL
+4. Save, then **Deployments** → **Retry deployment** (needed so the function picks up the variable)
+
+### 3. Test
+
+1. Open your live site → **Order** section
+2. Submit a test order with your Minecraft username
+3. Check your Discord orders channel — you should see an embed within a few seconds
+
+> **Note:** Orders only work on **Cloudflare Pages** (not plain GitHub Pages or local preview), because the `/api/order` endpoint runs as a Cloudflare Function.
+
+### Optional: full Discord bot
+
+The bot in `discord-bot/` is separate — useful for `/shop`, `/kits`, and `/stock` commands. Order posting uses the webhook above and does not require the bot to be online.
+
 ## Discord bot setup
 
 The bot lives in `discord-bot/` and connects your Discord server to the business.
@@ -104,27 +137,26 @@ The bot needs a always-on Node process. Free/cheap options:
 - **A VPS** — run with `pm2` or systemd
 - **Your PC** — fine for testing with `npm start`
 
-## Website ↔ Discord integration (roadmap)
+## Future upgrades
 
-The current site is static. The bot is the first bridge. Future upgrades:
-
-1. **Live stock feed** — Cloudflare Worker API + bot `/stock` command writes to KV storage; website reads it
-2. **Order tickets** — Discord ticket bot linked from site buttons
-3. **Price list** — JSON file or API synced from in-game shop data
+1. **Live stock feed** — Cloudflare KV + bot `/stock` command
+2. **Order status** — bot reacts to orders or DMs customers when ready
+3. **Price list** — JSON or API synced from in-game shop data
 
 ## Project structure
 
 ```
 redmont-essentials/
-├── index.html          # Main page
-├── css/styles.css      # Styles & animations
+├── index.html              # Main page + order form
+├── css/styles.css
 ├── js/
-│   ├── config.js       # Your Discord URL, guild ID, etc.
-│   └── main.js         # Nav, scroll reveal, widget loader
-├── logo.png            # Your business logo
-├── discord-bot/        # Optional Discord bot
-├── wrangler.toml       # Cloudflare Pages config
-└── .github/workflows/  # GitHub Pages deploy
+│   ├── config.js
+│   └── main.js
+├── functions/api/order.js  # Posts orders to Discord (Cloudflare only)
+├── logo.png
+├── discord-bot/            # Optional slash-command bot
+├── wrangler.toml
+└── .github/workflows/
 ```
 
 ## Customize content

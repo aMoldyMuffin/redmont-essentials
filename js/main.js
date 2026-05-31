@@ -136,6 +136,64 @@
     `;
   }
 
+  // ── Order form ──
+  const orderForm = document.getElementById('orderForm');
+  const orderStatus = document.getElementById('orderStatus');
+  const orderSubmit = document.getElementById('orderSubmit');
+  const orderKitSelect = document.getElementById('orderKit');
+
+  document.querySelectorAll('[data-kit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kit = btn.getAttribute('data-kit');
+      if (orderKitSelect && kit) orderKitSelect.value = kit;
+    });
+  });
+
+  if (orderForm) {
+    orderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      orderStatus.textContent = '';
+      orderStatus.className = 'order-status';
+
+      const formData = new FormData(orderForm);
+      const payload = {
+        ign: formData.get('ign'),
+        orderType: formData.get('orderType'),
+        kit: formData.get('kit'),
+        discord: formData.get('discord'),
+        notes: formData.get('notes'),
+        website: formData.get('website'),
+      };
+
+      orderSubmit.disabled = true;
+      orderSubmit.textContent = 'Sending…';
+
+      try {
+        const apiUrl = config.orderApiUrl || '/api/order';
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Something went wrong. Try again or order on Discord.');
+        }
+
+        orderStatus.textContent = data.message || 'Order sent! We will be in touch soon.';
+        orderStatus.classList.add('success');
+        orderForm.reset();
+      } catch (err) {
+        orderStatus.textContent = err.message || 'Could not send order. Join our Discord to order instead.';
+        orderStatus.classList.add('error');
+      } finally {
+        orderSubmit.disabled = false;
+        orderSubmit.textContent = 'Submit Order';
+      }
+    });
+  }
+
   // ── Smooth anchor offset fix on load ──
   if (window.location.hash) {
     requestAnimationFrame(() => {
