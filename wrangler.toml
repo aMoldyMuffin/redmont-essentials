@@ -1,8 +1,7 @@
-# Cloudflare Pages — no build step needed (static site)
-# Connect your GitHub repo in the Cloudflare dashboard, or use: npx wrangler pages deploy .
+# Cloudflare Pages — static site (no build step)
+# For Git deploy: leave Build command EMPTY in the Cloudflare dashboard.
+# Manual deploy only: npx wrangler pages deploy . --project-name=redmont-essentials
 
-[build]
-command = ""
-
-[site]
-bucket = "."
+name = "redmont-essentials"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "."

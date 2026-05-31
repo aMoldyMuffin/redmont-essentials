@@ -36,14 +36,20 @@ discordGuildId: 'YOUR_SERVER_ID',  // enables live Discord widget
 
 ### Cloudflare Pages (recommended)
 
-Easiest path if you want to add **dynamic features later** (API routes via Cloudflare Workers).
-
 1. Push this folder to a GitHub repo
-2. Go to [Cloudflare Dashboard → Pages](https://dash.cloudflare.com/) → Create project → Connect Git
-3. Build settings:
-   - **Build command:** *(leave empty)*
-   - **Build output directory:** `/` (root)
+2. Go to [Cloudflare Dashboard → Pages](https://dash.cloudflare.com/) → **Create** → **Pages** → **Connect to Git**
+3. Select your repo and use these settings exactly:
+
+| Setting | Value |
+|---------|--------|
+| **Production branch** | `main` |
+| **Framework preset** | None |
+| **Build command** | *(leave empty — do not use `npx wrangler deploy`)* |
+| **Build output directory** | `.` or `/` |
+
 4. Deploy — your site goes live at `*.pages.dev`
+
+> **Important:** This is a static HTML site. If Cloudflare shows a "Deploy command" of `npx wrangler deploy`, remove it — that is for Workers, not Pages. Go to **Settings → Builds & deployments** and clear the build/deploy command.
 
 To deploy manually:
 
