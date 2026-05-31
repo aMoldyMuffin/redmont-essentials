@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Redmont Essentials — Everything you need to get started on Democracy Craft. Starter gear kits, buy & sell goods, and friendly service for new players." />
+  <title>Redmont Essentials | Democracy Craft</title>
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <header class="header" id="header">
+    <nav class="nav container">
+      <a href="#home" class="nav-brand">
+        <img src="logo.png" alt="Redmont Essentials" class="nav-logo" />
+        <span class="nav-name">Redmont <strong>Essentials</strong></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#kits">Gear Kits</a></li>
+        <li><a href="#trade">Buy &amp; Sell</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#discord" class="nav-cta">Join Discord</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div class="hero-content reveal">
+          <p class="hero-badge">Democracy Craft · Redmont</p>
+          <h1>Everything you need<br /><span class="gold">to get started.</span></h1>
+          <p class="hero-desc">
+            Starter gear kits, fair prices, and a one-stop shop for new players.
+            Visit us in-game or join our Discord to order ahead.
+          </p>
+          <div class="hero-actions">
+            <a href="#kits" class="btn btn-primary">Browse Gear Kits</a>
+            <a href="#discord" class="btn btn-outline">Join Our Discord</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-value">New Player</span>
+              <span class="stat-label">Focused</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-value">Buy &amp; Sell</span>
+              <span class="stat-label">General Goods</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-value">In-Game</span>
+              <span class="stat-label">Chest Shops</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual reveal reveal-delay">
+          <div class="hero-logo-wrap">
+            <div class="hero-glow"></div>
+            <img src="logo.png" alt="Redmont Essentials logo" class="hero-logo" />
+          </div>
+        </div>
+      </div>
+      <a href="#kits" class="scroll-hint" aria-label="Scroll to content">
+        <span>Explore</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </a>
+    </section>
+
+    <!-- Gear Kits -->
+    <section class="section" id="kits">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">Starter Packages</span>
+          <h2>Gear Kits</h2>
+          <p>Curated kits so you can skip the grind and jump straight into Redmont life.</p>
+        </div>
+        <div class="cards-grid">
+          <article class="card kit-card reveal">
+            <div class="card-icon">🎒</div>
+            <h3>Survival Starter</h3>
+            <p>Tools, food, and basics to survive your first days in the city.</p>
+            <ul class="card-list">
+              <li>Stone tools set</li>
+              <li>Starter food bundle</li>
+              <li>Torch &amp; building blocks</li>
+            </ul>
+            <a href="#discord" class="btn btn-card">Order on Discord</a>
+          </article>
+          <article class="card kit-card featured reveal reveal-delay">
+            <div class="card-badge">Most Popular</div>
+            <div class="card-icon">⚔️</div>
+            <h3>Adventurer Kit</h3>
+            <p>Everything a new player needs — tools, armor, and supplies in one chest.</p>
+            <ul class="card-list">
+              <li>Iron armor &amp; sword</li>
+              <li>Pickaxe, axe, shovel</li>
+              <li>Crafting table &amp; furnace</li>
+              <li>Food &amp; torches</li>
+            </ul>
+            <a href="#discord" class="btn btn-primary btn-card">Order on Discord</a>
+          </article>
+          <article class="card kit-card reveal reveal-delay-2">
+            <div class="card-icon">🏗️</div>
+            <h3>Builder Bundle</h3>
+            <p>Blocks and materials to set up your first plot or apartment.</p>
+            <ul class="card-list">
+              <li>Common building blocks</li>
+              <li>Glass &amp; doors</li>
+              <li>Interior decor basics</li>
+            </ul>
+            <a href="#discord" class="btn btn-card">Order on Discord</a>
+          </article>
+        </div>
+        <p class="section-note reveal">Prices vary — check Discord or visit our in-game shop for current rates.</p>
+      </div>
+    </section>
+
+    <!-- Buy & Sell -->
+    <section class="section section-alt" id="trade">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">General Store</span>
+          <h2>Buy &amp; Sell</h2>
+          <p>We trade common goods through in-game chest shops. Fair prices, fast service.</p>
+        </div>
+        <div class="trade-grid">
+          <div class="trade-panel reveal">
+            <h3>We Sell</h3>
+            <div class="trade-tags">
+              <span>Ores &amp; Ingots</span>
+              <span>Farming Goods</span>
+              <span>Building Blocks</span>
+              <span>Food &amp; Supplies</span>
+              <span>Tools</span>
+              <span>Decor Items</span>
+            </div>
+          </div>
+          <div class="trade-panel reveal reveal-delay">
+            <h3>We Buy</h3>
+            <div class="trade-tags">
+              <span>Raw Materials</span>
+              <span>Crops &amp; Animal Products</span>
+              <span>Common Drops</span>
+              <span>Bulk Resources</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-banner reveal">
+          <div class="info-banner-icon">📍</div>
+          <div>
+            <strong>Find us in-game</strong>
+            <p>Look for chest shops tagged <code>b: Redmont Essentials</code>. Right-click to buy, left-click to sell.</p>
+          </div>
+          <a href="#discord" class="btn btn-outline btn-sm">Ask for Directions</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about">
+      <div class="container about-grid">
+        <div class="about-content reveal">
+          <span class="section-tag">Who We Are</span>
+          <h2>Built for new players.</h2>
+          <p>
+            Redmont Essentials started with a simple idea: make Democracy Craft less overwhelming
+            for newcomers. Starting with $1,200 and a empty inventory is tough — we package the
+            essentials so you can focus on exploring the city, finding a job, and building your life in Redmont.
+          </p>
+          <p>
+            Whether you need your first pickaxe or want to offload a haul of crops, we're here to help.
+            Our Discord is the fastest way to get support, place custom orders, or check what's in stock.
+          </p>
+        </div>
+        <div class="about-features reveal reveal-delay">
+          <div class="feature">
+            <span class="feature-num">01</span>
+            <div>
+              <h4>Fair Pricing</h4>
+              <p>Competitive rates designed with new players in mind.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-num">02</span>
+            <div>
+              <h4>Fast Service</h4>
+              <p>Order on Discord or walk up to our chest shops anytime.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-num">03</span>
+            <div>
+              <h4>Community First</h4>
+              <p>We're players too — we know what it's like to start fresh.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Discord -->
+    <section class="section section-discord" id="discord">
+      <div class="container">
+        <div class="discord-card reveal">
+          <div class="discord-content">
+            <span class="section-tag">Main Portal</span>
+            <h2>Join our Discord</h2>
+            <p>
+              Orders, support, stock updates, and community — everything runs through our Discord server.
+              A website bot is coming soon to sync live shop info right here.
+            </p>
+            <div class="discord-actions">
+              <a href="https://discord.gg/YEK4K2cY7n" class="btn btn-primary btn-lg" id="discordInvite" target="_blank" rel="noopener noreferrer">
+                Join Discord Server
+              </a>
+              <a href="https://play.democracycraft.net" class="btn btn-outline btn-lg" target="_blank" rel="noopener noreferrer">
+                play.democracycraft.net
+              </a>
+            </div>
+          </div>
+          <div class="discord-panel" id="discordPanel">
+            <div class="discord-panel-loading">Loading server info…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img src="logo.png" alt="" class="footer-logo" />
+        <p>Everything you need to get started.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#kits">Gear Kits</a>
+        <a href="#trade">Buy &amp; Sell</a>
+        <a href="#about">About</a>
+        <a href="#discord">Discord</a>
+      </div>
+      <div class="footer-meta">
+        <p>Redmont Essentials · Unofficial fan site</p>
+        <p>Not affiliated with Democracy Craft staff.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

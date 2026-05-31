@@ -1,0 +1,8 @@
+# Cloudflare Pages — no build step needed (static site)
+# Connect your GitHub repo in the Cloudflare dashboard, or use: npx wrangler pages deploy .
+
+[build]
+command = ""
+
+[site]
+bucket = "."
