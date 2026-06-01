@@ -265,10 +265,24 @@
       priceDisplay: pricing.display,
     };
 
+    if (window.OrderGate?.isEnabled() && !window.OrderGate.isUnlocked()) {
+      orderStatus.textContent = 'Complete the verification check above first.';
+      orderStatus.classList.add('error');
+      return;
+    }
+
     orderSubmit.disabled = true;
     orderSubmit.classList.add('loading');
 
     try {
+      if (window.OrderGate?.isEnabled()) {
+        try {
+          payload.turnstileToken = await window.OrderGate.getSubmitToken();
+        } catch (verifyErr) {
+          throw new Error(verifyErr.message || 'Verification required.');
+        }
+      }
+
       const res = await fetch(config.orderApiUrl || '/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

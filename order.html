@@ -40,6 +40,16 @@
         Back to home
       </a>
 
+      <div id="orderVerify" class="order-card order-verify reveal" hidden>
+        <span class="section-tag">Security check</span>
+        <h1>Verify to place an order</h1>
+        <p>Complete the check below so we know you're a real person. This helps stop spam bots.</p>
+        <div id="turnstileGate" class="turnstile-wrap"></div>
+        <p class="order-status" id="verifyStatus" role="status"></p>
+        <p class="field-hint verify-alt">You can also order in our Discord server with <code>/order</code>.</p>
+      </div>
+
+      <div id="orderApp" hidden>
       <div class="order-page-intro reveal">
         <span class="section-tag">Place an Order</span>
         <h1>What do you need?</h1>
@@ -99,6 +109,7 @@
           </div>
 
           <input type="text" name="website" class="order-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <div id="turnstileSubmit" class="turnstile-submit" aria-hidden="true"></div>
 
           <div class="order-total-bar" id="orderTotalBar">
             <div class="order-total" id="orderTotal">
@@ -125,6 +136,7 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </main>
 
@@ -138,6 +150,7 @@
   <script src="js/config.js"></script>
   <script src="js/shared.js"></script>
   <script src="js/catalog.js"></script>
+  <script src="js/order-gate.js"></script>
   <script src="js/order.js"></script>
 </body>
 </html>

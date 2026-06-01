@@ -907,6 +907,35 @@ body {
   color: var(--text-muted);
 }
 
+.order-verify h1 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  margin: 0.5rem 0 0.75rem;
+}
+
+.turnstile-wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 72px;
+  margin: 1.25rem 0;
+}
+
+.turnstile-submit {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.verify-alt {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.verify-alt code {
+  color: var(--gold-400);
+}
+
 .order-honeypot {
   position: absolute;
   left: -9999px;
