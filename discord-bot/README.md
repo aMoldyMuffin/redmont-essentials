@@ -48,6 +48,16 @@ npm start
 
 Monty must run 24/7 to receive orders and handle claim buttons.
 
+**Important — persistent database (fixes “order not found” when claiming):**
+
+Railway’s disk is wiped on redeploy unless you add a volume. Without it, orders post to Discord but **Claim** fails after a restart.
+
+1. Railway → your Monty service → **Volumes** → Add volume (e.g. mount `/data`)
+2. Variables → `DATABASE_PATH` = `/data/monty.db`
+3. Redeploy
+
+Also run **only one** Monty instance (don’t `npm start` locally while Railway is online with the same bot token).
+
 **Railway (recommended, free tier):**
 1. [railway.app](https://railway.app) → New Project → Deploy from GitHub
 2. Set root directory to `discord-bot`

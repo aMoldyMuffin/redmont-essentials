@@ -10,7 +10,14 @@ import {
 } from 'discord.js';
 import { startApiServer } from './api.js';
 import { getCatalog, buildKitsEmbed } from './catalog.js';
-import { claimOrder, getLeaderboard, getStaffStats, getOpenOrderCount } from './db.js';
+import {
+  claimOrder,
+  getLeaderboard,
+  getStaffStats,
+  getOpenOrderCount,
+  getOrder,
+  getOrderByMessageId,
+} from './db.js';
 import { buildOrderEmbed, buildClaimButton } from './orders.js';
 import {
   buildOrderStartEmbed,
@@ -114,7 +121,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (interaction.isButton() && interaction.customId.startsWith('monty_claim:')) {
-      const orderId = interaction.customId.split(':')[1];
+      let orderId = interaction.customId.slice('monty_claim:'.length);
 
       if (!isStaff(interaction.member)) {
         await interaction.reply({
@@ -124,15 +131,43 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const claimed = claimOrder(orderId, interaction.user.id, interaction.user.username);
-      if (!claimed) {
+      let order = getOrder(orderId);
+      if (!order && interaction.message?.id) {
+        order = getOrderByMessageId(interaction.message.id);
+        if (order) orderId = order.id;
+      }
+
+      if (!order) {
+        console.warn(
+          `Claim failed: order ${orderId} not in DB (message ${interaction.message?.id}). ` +
+            'If Monty restarted or Railway has no volume, orders are lost — place a new order.'
+        );
         await interaction.reply({
-          content: 'This order was already claimed or does not exist.',
+          content:
+            'This order is not in Monty’s database (often after a bot restart without persistent storage). ' +
+            'Place a new order, or add a Railway volume for the database — see discord-bot/README.md.',
           ephemeral: true,
         });
         return;
       }
 
+      const result = claimOrder(orderId, interaction.user.id, interaction.user.username);
+      if (result?.error === 'already_claimed') {
+        await interaction.reply({
+          content: `This order was already claimed by **${result.order.claimed_by_name}**.`,
+          ephemeral: true,
+        });
+        return;
+      }
+      if (!result?.ok) {
+        await interaction.reply({
+          content: 'Could not claim this order. Try again.',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const claimed = result.order;
       await interaction.update({
         content: `✅ Order **#${orderId}** claimed by ${interaction.user}`,
         embeds: [buildOrderEmbed(claimed, { claimed: true })],

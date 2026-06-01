@@ -4,9 +4,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = process.env.DATABASE_PATH || join(__dirname, '..', 'data', 'monty.db');
+export const dbPath = process.env.DATABASE_PATH || join(__dirname, '..', 'data', 'monty.db');
 
 mkdirSync(dirname(dbPath), { recursive: true });
+console.log(`Monty database: ${dbPath}`);
 
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
@@ -42,11 +43,14 @@ db.exec(`
   );
 `);
 
-try {
-  db.exec(`ALTER TABLE orders ADD COLUMN price REAL`);
-} catch {
-  /* column may already exist */
+function ensureMigrations() {
+  const cols = db.prepare('PRAGMA table_info(orders)').all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has('price')) {
+    db.exec(`ALTER TABLE orders ADD COLUMN price REAL DEFAULT 0`);
+  }
 }
+ensureMigrations();
 
 export function createOrder(order) {
   const stmt = db.prepare(`
@@ -60,7 +64,15 @@ export function createOrder(order) {
 }
 
 export function getOrder(id) {
-  return db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  const normalized = String(id || '').toUpperCase();
+  return (
+    db.prepare('SELECT * FROM orders WHERE id = ?').get(normalized) ||
+    db.prepare('SELECT * FROM orders WHERE id = ?').get(id)
+  );
+}
+
+export function getOrderByMessageId(messageId) {
+  return db.prepare('SELECT * FROM orders WHERE message_id = ?').get(messageId);
 }
 
 export function setOrderMessage(id, messageId, channelId) {
@@ -70,7 +82,8 @@ export function setOrderMessage(id, messageId, channelId) {
 export function claimOrder(id, userId, username) {
   const txn = db.transaction(() => {
     const order = getOrder(id);
-    if (!order || order.status !== 'open') return null;
+    if (!order) return { error: 'not_found' };
+    if (order.status !== 'open') return { error: 'already_claimed', order };
 
     const now = Date.now();
     db.prepare(`
@@ -93,7 +106,10 @@ export function claimOrder(id, userId, username) {
       `).run(userId, username, order.weight);
     }
 
-    return { ...order, claimed_by_id: userId, claimed_by_name: username, claimed_at: now };
+    return {
+      ok: true,
+      order: { ...order, claimed_by_id: userId, claimed_by_name: username, claimed_at: now },
+    };
   });
 
   return txn();
