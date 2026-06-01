@@ -18,6 +18,7 @@
   let gateWidgetId = null;
   let submitWidgetId = null;
   let submitTokenPromise = null;
+  let turnstileLoadPromise = null;
 
   function isEnabled() {
     return Boolean(config.turnstileSiteKey?.trim());
@@ -50,37 +51,44 @@
     setSessionVerified();
   }
 
+  function resetTurnstileLoader() {
+    turnstileLoadPromise = null;
+    gateWidgetId = null;
+    submitWidgetId = null;
+    document.querySelectorAll('script[data-turnstile-loader]').forEach((el) => el.remove());
+  }
+
   function whenTurnstileReady() {
-    return new Promise((resolve, reject) => {
+    if (turnstileLoadPromise) return turnstileLoadPromise;
+
+    turnstileLoadPromise = new Promise((resolve, reject) => {
       if (global.turnstile?.ready) {
         global.turnstile.ready(resolve);
         return;
       }
 
-      const existing = document.querySelector('script[data-turnstile-loader]');
-      if (existing) {
-        existing.addEventListener('load', () => {
-          if (global.turnstile?.ready) global.turnstile.ready(resolve);
-          else reject(new Error('Verification failed to load.'));
-        });
-        return;
-      }
+      document.querySelectorAll('script[data-turnstile-loader]').forEach((el) => el.remove());
 
       const s = document.createElement('script');
       s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-      s.async = true;
-      s.defer = true;
       s.dataset.turnstileLoader = '1';
+      // Cloudflare: do not use async/defer with turnstile.ready()
       s.onload = () => {
         if (global.turnstile?.ready) {
           global.turnstile.ready(resolve);
         } else {
+          turnstileLoadPromise = null;
           reject(new Error('Verification failed to load.'));
         }
       };
-      s.onerror = () => reject(new Error('Could not load verification (blocked or offline).'));
+      s.onerror = () => {
+        turnstileLoadPromise = null;
+        reject(new Error('Could not load verification (blocked or offline).'));
+      };
       document.head.appendChild(s);
     });
+
+    return turnstileLoadPromise;
   }
 
   function onVerifySuccess(token) {
@@ -230,6 +238,7 @@
     if (gateEl) gateEl.hidden = false;
 
     retryBtn?.addEventListener('click', () => {
+      resetTurnstileLoader();
       setupGate();
     });
 
