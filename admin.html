@@ -15,8 +15,7 @@
     <a href="index.html" class="back-link">← Back to site</a>
     <h1>Shop admin</h1>
     <p class="admin-intro">
-      Edit kits, categories, and prices. Changes apply to the homepage, order page, and Discord <code>/order</code>.
-      Set <strong>ADMIN_SECRET</strong> in Cloudflare and Railway (same value).
+      Edit what customers see on the website and in Discord <code>/order</code>. Changes apply after you click Save.
     </p>
 
     <p class="admin-status" id="adminStatus" role="status"></p>
@@ -27,17 +26,71 @@
       <button type="button" class="btn btn-primary" id="adminLoginBtn">Log in</button>
     </div>
 
-    <div id="adminPanel" class="admin-card" hidden>
-      <div class="admin-toolbar">
-        <button type="button" class="btn btn-primary" id="adminSaveBtn">Save catalog</button>
+    <div id="adminPanel" hidden>
+      <div class="admin-toolbar admin-card">
+        <button type="button" class="btn btn-primary" id="adminSaveBtn">Save changes</button>
         <button type="button" class="btn btn-outline" id="adminReloadBtn">Reload</button>
         <button type="button" class="btn btn-outline" id="adminLogoutBtn">Log out</button>
       </div>
-      <p class="admin-hint">
-        <strong>Prices:</strong> edit <code>price</code> on each kit/category. Currency symbol: <code>currency</code>.
-        Sell orders use <code>pricing.sellMultiplier</code> (e.g. 0.8 = 80% of buy price).
-      </p>
-      <textarea id="catalogEditor" class="admin-editor" spellcheck="false"></textarea>
+
+      <form id="adminForm" class="admin-form" novalidate>
+        <section class="admin-section admin-card">
+          <h2>Prices &amp; settings</h2>
+          <div class="admin-grid-2">
+            <div class="admin-field">
+              <label for="currency">Currency symbol</label>
+              <input type="text" id="currency" maxlength="4" placeholder="$" />
+            </div>
+            <div class="admin-field">
+              <label for="sellMultiplier">Sell order rate</label>
+              <input type="number" id="sellMultiplier" min="0" max="2" step="0.05" />
+              <span class="field-hint">e.g. 0.8 = customers get 80% of buy price when selling to you</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-section admin-card">
+          <h2>Homepage — Gear Kits section</h2>
+          <div class="admin-grid-2">
+            <div class="admin-field">
+              <label for="kitsTag">Small label</label>
+              <input type="text" id="kitsTag" placeholder="Starter Packages" />
+            </div>
+            <div class="admin-field">
+              <label for="kitsTitle">Heading</label>
+              <input type="text" id="kitsTitle" placeholder="Gear Kits" />
+            </div>
+          </div>
+          <div class="admin-field">
+            <label for="kitsSubtitle">Subtitle</label>
+            <textarea id="kitsSubtitle" rows="2" placeholder="Short description under the heading"></textarea>
+          </div>
+        </section>
+
+        <section class="admin-section admin-card">
+          <div class="admin-section-head">
+            <h2>Gear kits</h2>
+            <p>Shown in <code>/order</code> → Gear Kit and on the homepage (first 3 kits).</p>
+          </div>
+          <div id="kitsList" class="admin-items"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="addKitBtn">+ Add gear kit</button>
+        </section>
+
+        <section class="admin-section admin-card">
+          <div class="admin-section-head">
+            <h2>Buy &amp; sell categories</h2>
+            <p>Shown in <code>/order</code> when customers pick Buy Items or Sell Items.</p>
+          </div>
+          <div id="categoriesList" class="admin-items admin-items-compact"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="addCategoryBtn">+ Add category</button>
+        </section>
+
+        <details class="admin-advanced admin-card">
+          <summary>Advanced — edit raw JSON</summary>
+          <textarea id="catalogEditor" class="admin-editor" spellcheck="false"></textarea>
+          <button type="button" class="btn btn-outline btn-sm" id="applyJsonBtn">Apply JSON to form</button>
+        </details>
+      </form>
     </div>
   </main>
 
