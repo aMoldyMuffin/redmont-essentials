@@ -235,10 +235,13 @@ client.on('interactionCreate', async (interaction) => {
     }
   } catch (err) {
     console.error('Interaction error:', err);
+    const hint = err?.message?.includes('showModal')
+      ? 'Could not open the form — run `/order` again and pick your kit.'
+      : 'Something went wrong.';
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'Something went wrong.', ephemeral: true }).catch(() => {});
+      await interaction.followUp({ content: hint, ephemeral: true }).catch(() => {});
     } else {
-      await interaction.reply({ content: 'Something went wrong.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: hint, ephemeral: true }).catch(() => {});
     }
   }
 });

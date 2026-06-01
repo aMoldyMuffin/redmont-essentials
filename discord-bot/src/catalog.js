@@ -14,12 +14,33 @@ function loadDefaultCatalog() {
   return JSON.parse(readFileSync(defaultPath, 'utf8'));
 }
 
+function normalizeCatalog(catalog) {
+  const defaults = loadDefaultCatalog();
+  if (!catalog || typeof catalog !== 'object') return defaults;
+
+  if (!Array.isArray(catalog.kits) || catalog.kits.length === 0) {
+    catalog.kits = defaults.kits;
+  }
+  if (!Array.isArray(catalog.categories) || catalog.categories.length === 0) {
+    catalog.categories = defaults.categories;
+  }
+  if (!Array.isArray(catalog.orderTypes) || catalog.orderTypes.length === 0) {
+    catalog.orderTypes = defaults.orderTypes;
+  }
+  if (!catalog.kitsSection) catalog.kitsSection = defaults.kitsSection;
+  if (!catalog.trade) catalog.trade = defaults.trade;
+  if (!catalog.pricing) catalog.pricing = defaults.pricing;
+  if (!catalog.currency) catalog.currency = defaults.currency;
+
+  return catalog;
+}
+
 export function getCatalog() {
   if (memoryCatalog) return memoryCatalog;
 
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(CATALOG_KEY);
   if (row?.value) {
-    memoryCatalog = JSON.parse(row.value);
+    memoryCatalog = normalizeCatalog(JSON.parse(row.value));
     return memoryCatalog;
   }
 
@@ -30,6 +51,7 @@ export function getCatalog() {
 }
 
 export function saveCatalog(catalog, { skipMemory = false } = {}) {
+  catalog = normalizeCatalog(catalog);
   const json = JSON.stringify(catalog);
   db.prepare(`
     INSERT INTO settings (key, value) VALUES (?, ?)

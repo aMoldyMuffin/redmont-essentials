@@ -146,10 +146,7 @@ export async function handleDiscordOrderInteraction(interaction, client, ordersC
     }
 
     pendingOrders.set(interaction.user.id, { orderType, items: ['Custom request'] });
-    await interaction.update({
-      content: '**Step 3 of 3** — Describe your request in the notes field:',
-      components: [],
-    });
+    // Discord only allows showModal OR update — not both on one interaction
     await interaction.showModal(buildIgnModal());
     return true;
   }
@@ -160,13 +157,6 @@ export async function handleDiscordOrderInteraction(interaction, client, ordersC
     pending.items = [kitId];
     pendingOrders.set(interaction.user.id, pending);
 
-    const kit = catalog.kits.find((k) => k.id === kitId);
-    const price = kit ? formatMoney(catalog, kit.price) : '—';
-
-    await interaction.update({
-      content: `**${kitId}** · ${price}\n\n**Step 3 of 3** — Enter your Minecraft username:`,
-      components: [],
-    });
     await interaction.showModal(buildIgnModal());
     return true;
   }
@@ -180,13 +170,6 @@ export async function handleDiscordOrderInteraction(interaction, client, ordersC
     pending.items = interaction.values;
     pendingOrders.set(interaction.user.id, pending);
 
-    const itemText = pending.items.join(', ');
-    const pricing = calculateOrderPrice(catalog, pending.orderType, itemText);
-
-    await interaction.update({
-      content: `**${itemText}**\nEst. total: **${pricing.display}**\n\n**Step 3 of 3** — Enter your Minecraft username:`,
-      components: [],
-    });
     await interaction.showModal(buildIgnModal());
     return true;
   }

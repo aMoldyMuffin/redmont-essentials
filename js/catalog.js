@@ -59,14 +59,27 @@
 
   async function fetchCatalog() {
     if (cached) return cached;
-    const url = config.catalogApiUrl || '/api/catalog';
-    const res = await fetch(url);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.catalog) {
-      throw new Error(data.error || 'Could not load shop catalog');
+
+    const apiUrl = config.catalogApiUrl || '/api/catalog';
+    try {
+      const res = await fetch(apiUrl);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.catalog?.kits?.length) {
+        cached = data.catalog;
+        return cached;
+      }
+    } catch {
+      /* try static fallback */
     }
-    cached = data.catalog;
-    return cached;
+
+    const fallbackRes = await fetch('/config/catalog.json');
+    const fallback = await fallbackRes.json().catch(() => null);
+    if (fallbackRes.ok && fallback?.kits?.length) {
+      cached = fallback;
+      return cached;
+    }
+
+    throw new Error('Could not load shop catalog');
   }
 
   function renderKitsSection(catalog, container) {
@@ -84,8 +97,15 @@
     const grid = container.querySelector('[data-kits-grid]');
     if (!grid) return;
 
-    grid.innerHTML = catalog.kits
-      .filter((k) => k.id !== 'Custom Kit' || catalog.kits.length <= 4)
+    const kits = Array.isArray(catalog.kits) ? catalog.kits : [];
+    if (!kits.length) {
+      grid.innerHTML =
+        '<p class="catalog-loading">Kits could not be loaded. <a href="order.html">Order here</a> or try again later.</p>';
+      return;
+    }
+
+    grid.innerHTML = kits
+      .filter((k) => k.id !== 'Custom Kit' || kits.length <= 4)
       .slice(0, 3)
       .map((k, i) => {
         const featured = k.featured;
