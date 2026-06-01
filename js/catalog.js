@@ -57,29 +57,44 @@
     return { total, display: formatMoney(catalog, total), quotable: false };
   }
 
+  /** Static file on Pages — always works without Monty */
+  async function fetchStaticCatalog() {
+    const res = await fetch('/config/catalog.json', { cache: 'no-store' });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.kits?.length) {
+      throw new Error('Static catalog file missing');
+    }
+    return data;
+  }
+
+  /** Live catalog from Monty via Cloudflare /api/catalog */
+  async function fetchFromApi() {
+    const apiUrl = config.catalogApiUrl || '/api/catalog';
+    const res = await fetch(apiUrl, { cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.catalog?.kits?.length) {
+      throw new Error(data.error || `Catalog API returned ${res.status}`);
+    }
+    return data.catalog;
+  }
+
+  /** Order page: API → static → error */
   async function fetchCatalog() {
     if (cached) return cached;
 
-    const apiUrl = config.catalogApiUrl || '/api/catalog';
     try {
-      const res = await fetch(apiUrl);
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.catalog?.kits?.length) {
-        cached = data.catalog;
-        return cached;
-      }
-    } catch {
-      /* try static fallback */
-    }
-
-    const fallbackRes = await fetch('/config/catalog.json');
-    const fallback = await fallbackRes.json().catch(() => null);
-    if (fallbackRes.ok && fallback?.kits?.length) {
-      cached = fallback;
+      cached = await fetchFromApi();
       return cached;
+    } catch {
+      /* fall through */
     }
 
-    throw new Error('Could not load shop catalog');
+    try {
+      cached = await fetchStaticCatalog();
+      return cached;
+    } catch {
+      throw new Error('Could not load shop catalog');
+    }
   }
 
   function renderKitsSection(catalog, container) {
@@ -128,6 +143,10 @@
         `;
       })
       .join('');
+
+    container.querySelectorAll('.reveal').forEach((el) => {
+      requestAnimationFrame(() => el.classList.add('visible'));
+    });
   }
 
   function renderTradeSection(catalog, container) {
@@ -157,6 +176,8 @@
 
   global.CatalogAPI = {
     fetchCatalog,
+    fetchStaticCatalog,
+    fetchFromApi,
     formatMoney,
     calculateOrderPrice,
     renderKitsSection,
