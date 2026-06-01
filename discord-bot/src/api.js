@@ -13,6 +13,12 @@ export function startApiServer(client, { port, secret, ordersChannelId }) {
       return;
     }
 
+    if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, service: 'monty' }));
+      return;
+    }
+
     if (req.method !== 'POST' || req.url !== '/api/order') {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Not found' }));
@@ -85,7 +91,7 @@ export function startApiServer(client, { port, secret, ordersChannelId }) {
     }
   });
 
-  server.listen(port, () => {
+  server.listen(port, '0.0.0.0', () => {
     console.log(`Monty order API listening on port ${port}`);
   });
 
