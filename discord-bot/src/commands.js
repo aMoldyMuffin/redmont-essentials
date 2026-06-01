@@ -56,22 +56,13 @@ export function buildCommandDefinitions() {
   ];
 }
 
-export async function registerGuildCommands(rest, { clientId, guildId, staffRoleId }) {
+export async function registerGuildCommands(rest, { clientId, guildId }) {
   const defs = buildCommandDefinitions();
   const body = defs.map((d) => d.json);
   const registered = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body });
 
-  if (staffRoleId) {
-    for (const cmd of registered) {
-      if (!STAFF_COMMAND_NAMES.has(cmd.name)) continue;
-      await rest.put(Routes.applicationCommandPermissions(clientId, guildId, cmd.id), {
-        body: {
-          permissions: [{ id: staffRoleId, type: 1, permission: true }],
-        },
-      });
-    }
-  }
-
-  console.log('Monty slash commands registered (customers: /order only).');
+  console.log(
+    'Monty slash commands registered. Customers see /order; staff commands need Manage Messages.'
+  );
   return registered;
 }

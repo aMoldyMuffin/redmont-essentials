@@ -66,7 +66,7 @@ function requireStaff(interaction) {
 
 async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(token);
-  await registerGuildCommands(rest, { clientId, guildId, staffRoleId });
+  await registerGuildCommands(rest, { clientId, guildId });
 }
 
 function formatLeaderboard(rows) {
@@ -277,5 +277,5 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 registerCommands()
-  .then(() => client.login(token))
-  .catch(console.error);
+  .catch((err) => console.error('Command registration failed:', err))
+  .finally(() => client.login(token));

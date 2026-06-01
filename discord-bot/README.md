@@ -97,7 +97,7 @@ Restart Monty after changing weights.
 | Command | Who can use |
 |---------|-------------|
 | `/order` | **Everyone** — place an order |
-| `/leaderboard`, `/mystats`, `/orders`, `/shop`, `/kits` | **Staff only** (Manage Messages or `STAFF_ROLE_ID`) |
+| `/leaderboard`, `/mystats`, `/orders`, `/shop`, `/kits` | **Staff only** — role needs **Manage Messages** |
 
 ## How claiming works
 
