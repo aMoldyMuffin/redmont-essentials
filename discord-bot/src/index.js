@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import { STAFF_COMMAND_NAMES, registerGuildCommands } from './commands.js';
 import { notifyCustomerOrderClaimed } from './notifications.js';
+import { createOrderTicket, closeOrderTicketChannel, isTicketsEnabled } from './tickets.js';
 import { startApiServer } from './api.js';
 import { getCatalog, buildKitsEmbed } from './catalog.js';
 import {
@@ -154,9 +155,25 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const claimed = result.order;
+      let claimed = result.order;
+      let ticketMention = '';
+
+      if (isTicketsEnabled()) {
+        try {
+          const ticket = await createOrderTicket(client, guildId, claimed, interaction.user);
+          if (ticket?.channel) {
+            claimed = { ...claimed, ticket_channel_id: ticket.channel.id };
+            ticketMention = ` · Ticket: ${ticket.channel}`;
+          }
+        } catch (err) {
+          console.warn('Ticket channel failed:', err.message);
+          ticketMention =
+            ' · ⚠️ Could not open ticket channel — check **TICKET_CATEGORY_ID** and bot **Manage Channels**.';
+        }
+      }
+
       await interaction.update({
-        content: `✅ Order **#${orderId}** claimed by ${interaction.user}`,
+        content: `✅ Order **#${orderId}** claimed by ${interaction.user}${ticketMention}`,
         embeds: [buildOrderEmbed(claimed, { claimed: true })],
         components: [buildClaimButton(orderId, true)],
       });
@@ -164,6 +181,12 @@ client.on('interactionCreate', async (interaction) => {
       notifyCustomerOrderClaimed(client, guildId, claimed, interaction.user).catch((err) =>
         console.warn('Claim notification failed:', err.message)
       );
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith('monty_ticket_close:')) {
+      const orderId = interaction.customId.slice('monty_ticket_close:'.length);
+      await closeOrderTicketChannel(interaction, orderId);
       return;
     }
 

@@ -62,8 +62,12 @@ export async function notifyCustomerOrderClaimed(client, guildId, order, claimed
       .setFooter({ text: 'Redmont Essentials · Monty' })
       .setTimestamp();
 
+    const ticketLine = order.ticket_channel_id
+      ? `\n\nOpen your private ticket: <#${order.ticket_channel_id}>`
+      : '';
+
     await user.send({
-      content: `Hi <@${userId}> — your Redmont Essentials order was claimed!`,
+      content: `Hi <@${userId}> — your Redmont Essentials order was claimed!${ticketLine}`,
       embeds: [embed],
     });
   } catch (err) {

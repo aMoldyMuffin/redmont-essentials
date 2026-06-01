@@ -49,6 +49,9 @@ function ensureMigrations() {
   if (!names.has('price')) {
     db.exec(`ALTER TABLE orders ADD COLUMN price REAL DEFAULT 0`);
   }
+  if (!names.has('ticket_channel_id')) {
+    db.exec(`ALTER TABLE orders ADD COLUMN ticket_channel_id TEXT`);
+  }
 }
 ensureMigrations();
 
@@ -77,6 +80,14 @@ export function getOrderByMessageId(messageId) {
 
 export function setOrderMessage(id, messageId, channelId) {
   db.prepare('UPDATE orders SET message_id = ?, channel_id = ? WHERE id = ?').run(messageId, channelId, id);
+}
+
+export function setOrderTicketChannel(id, ticketChannelId) {
+  db.prepare('UPDATE orders SET ticket_channel_id = ? WHERE id = ?').run(ticketChannelId, id);
+}
+
+export function clearOrderTicketChannel(id) {
+  db.prepare('UPDATE orders SET ticket_channel_id = NULL WHERE id = ?').run(id);
 }
 
 export function claimOrder(id, userId, username) {

@@ -55,6 +55,14 @@ export function buildOrderEmbed(order, { claimed = false } = {}) {
     });
   }
 
+  if (order.ticket_channel_id) {
+    embed.addFields({
+      name: 'Ticket',
+      value: `<#${order.ticket_channel_id}>`,
+      inline: false,
+    });
+  }
+
   return embed;
 }
 
