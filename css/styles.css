@@ -915,8 +915,15 @@ body {
 .turnstile-wrap {
   display: flex;
   justify-content: center;
-  min-height: 72px;
+  align-items: center;
+  min-height: 80px;
   margin: 1.25rem 0;
+  padding: 0.5rem;
+}
+
+.verify-retry {
+  display: block;
+  margin: 0.75rem auto 0;
 }
 
 .turnstile-submit {

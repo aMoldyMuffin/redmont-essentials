@@ -8,6 +8,7 @@
   <link rel="icon" href="logo.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://challenges.cloudflare.com" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -40,12 +41,13 @@
         Back to home
       </a>
 
-      <div id="orderVerify" class="order-card order-verify reveal" hidden>
+      <div id="orderVerify" class="order-card order-verify reveal">
         <span class="section-tag">Security check</span>
         <h1>Verify to place an order</h1>
-        <p>Complete the check below so we know you're a real person. This helps stop spam bots.</p>
+        <p>Tick the box below (or complete the quick challenge) so we know you're a real person.</p>
         <div id="turnstileGate" class="turnstile-wrap"></div>
-        <p class="order-status" id="verifyStatus" role="status"></p>
+        <p class="order-status" id="verifyStatus" role="status">Loading security check…</p>
+        <button type="button" class="btn btn-outline verify-retry" id="verifyRetryBtn" hidden>Reload check</button>
         <p class="field-hint verify-alt">You can also order in our Discord server with <code>/order</code>.</p>
       </div>
 

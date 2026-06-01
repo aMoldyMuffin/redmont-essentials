@@ -13,14 +13,14 @@
   const gateStatus = document.getElementById('verifyStatus');
   const gateContainer = document.getElementById('turnstileGate');
   const submitContainer = document.getElementById('turnstileSubmit');
+  const retryBtn = document.getElementById('verifyRetryBtn');
 
-  let scriptLoaded = false;
   let gateWidgetId = null;
   let submitWidgetId = null;
   let submitTokenPromise = null;
 
   function isEnabled() {
-    return Boolean(config.turnstileSiteKey);
+    return Boolean(config.turnstileSiteKey?.trim());
   }
 
   function isSessionVerified() {
@@ -50,54 +50,89 @@
     setSessionVerified();
   }
 
-  function loadTurnstileScript() {
+  function whenTurnstileReady() {
     return new Promise((resolve, reject) => {
-      if (global.turnstile) {
-        resolve();
+      if (global.turnstile?.ready) {
+        global.turnstile.ready(resolve);
         return;
       }
-      if (scriptLoaded) {
-        const t = setInterval(() => {
-          if (global.turnstile) {
-            clearInterval(t);
-            resolve();
-          }
-        }, 50);
+
+      const existing = document.querySelector('script[data-turnstile-loader]');
+      if (existing) {
+        existing.addEventListener('load', () => {
+          if (global.turnstile?.ready) global.turnstile.ready(resolve);
+          else reject(new Error('Verification failed to load.'));
+        });
         return;
       }
-      scriptLoaded = true;
+
       const s = document.createElement('script');
       s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
       s.async = true;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error('Could not load verification.'));
+      s.defer = true;
+      s.dataset.turnstileLoader = '1';
+      s.onload = () => {
+        if (global.turnstile?.ready) {
+          global.turnstile.ready(resolve);
+        } else {
+          reject(new Error('Verification failed to load.'));
+        }
+      };
+      s.onerror = () => reject(new Error('Could not load verification (blocked or offline).'));
       document.head.appendChild(s);
     });
   }
 
+  function onVerifySuccess(token) {
+    if (!token) return;
+    showGateStatus('Verified — loading order form…', false);
+    unlockApp();
+  }
+
   function renderGateWidget() {
-    if (!gateContainer || !global.turnstile) return;
+    if (!gateContainer || !global.turnstile) return false;
+
+    if (gateWidgetId != null) {
+      try {
+        global.turnstile.remove(gateWidgetId);
+      } catch {
+        /* ignore */
+      }
+      gateWidgetId = null;
+    }
+
     gateContainer.innerHTML = '';
-    gateWidgetId = global.turnstile.render(gateContainer, {
-      sitekey: config.turnstileSiteKey,
-      theme: 'dark',
-      callback(token) {
-        if (token) {
-          showGateStatus('Verified — loading order form…', false);
-          unlockApp();
-        }
-      },
-      'error-callback'() {
-        showGateStatus('Verification failed. Refresh and try again.', true);
-      },
-      'expired-callback'() {
-        showGateStatus('Verification expired. Complete the check again.', true);
-      },
-    });
+
+    try {
+      gateWidgetId = global.turnstile.render(gateContainer, {
+        sitekey: config.turnstileSiteKey,
+        theme: 'dark',
+        size: 'normal',
+        callback: onVerifySuccess,
+        'error-callback'() {
+          showGateStatus('Verification error. Click “Reload check” below.', true);
+          if (retryBtn) retryBtn.hidden = false;
+        },
+        'expired-callback'() {
+          showGateStatus('Check expired — complete it again.', true);
+        },
+        'timeout-callback'() {
+          showGateStatus('Timed out — click “Reload check”.', true);
+          if (retryBtn) retryBtn.hidden = false;
+        },
+      });
+    } catch (err) {
+      console.error('Turnstile render error:', err);
+      return false;
+    }
+
+    return gateWidgetId != null;
   }
 
   function renderSubmitWidget() {
-    if (!submitContainer || !global.turnstile || submitWidgetId != null) return;
+    if (!submitContainer || !global.turnstile) return;
+    if (submitWidgetId != null) return;
+
     submitWidgetId = global.turnstile.render(submitContainer, {
       sitekey: config.turnstileSiteKey,
       theme: 'dark',
@@ -117,11 +152,54 @@
     });
   }
 
+  function widgetAppeared() {
+    return Boolean(gateContainer?.querySelector('iframe, input[name="cf-turnstile-response"]'));
+  }
+
+  async function setupGate() {
+    showGateStatus('Loading security check…', false);
+    if (retryBtn) retryBtn.hidden = true;
+
+    try {
+      await whenTurnstileReady();
+    } catch (err) {
+      showGateStatus(err.message, true);
+      if (retryBtn) retryBtn.hidden = false;
+      return;
+    }
+
+    const ok = renderGateWidget();
+    if (!ok) {
+      showGateStatus('Could not show verification. Click “Reload check”.', true);
+      if (retryBtn) retryBtn.hidden = false;
+      return;
+    }
+
+    renderSubmitWidget();
+
+    await new Promise((r) => setTimeout(r, 2500));
+
+    if (!widgetAppeared()) {
+      showGateStatus(
+        'Verification did not load. Add this site’s domain in Cloudflare Turnstile settings, then reload.',
+        true
+      );
+      if (retryBtn) retryBtn.hidden = false;
+      return;
+    }
+
+    showGateStatus('Complete the check above (checkbox or challenge), then you can order.', false);
+    if (retryBtn) retryBtn.hidden = false;
+  }
+
   function getSubmitToken() {
     if (!isEnabled()) return Promise.resolve(null);
 
-    return loadTurnstileScript().then(() => {
+    return whenTurnstileReady().then(() => {
       renderSubmitWidget();
+      if (submitWidgetId == null) {
+        throw new Error('Verification not ready.');
+      }
       return new Promise((resolve, reject) => {
         submitTokenPromise = { resolve, reject };
         global.turnstile.execute(submitWidgetId);
@@ -130,7 +208,7 @@
             submitTokenPromise.reject(new Error('Verification timed out. Try again.'));
             submitTokenPromise = null;
           }
-        }, 15000);
+        }, 20000);
       });
     });
   }
@@ -144,21 +222,18 @@
 
     if (isSessionVerified()) {
       unlockApp();
-      loadTurnstileScript().then(renderSubmitWidget).catch(() => {});
+      whenTurnstileReady().then(renderSubmitWidget).catch(() => {});
       return;
     }
 
     if (appEl) appEl.hidden = true;
     if (gateEl) gateEl.hidden = false;
 
-    loadTurnstileScript()
-      .then(() => {
-        renderGateWidget();
-        renderSubmitWidget();
-      })
-      .catch((err) => {
-        showGateStatus(err.message || 'Could not load verification.', true);
-      });
+    retryBtn?.addEventListener('click', () => {
+      setupGate();
+    });
+
+    setupGate();
   }
 
   global.OrderGate = {
