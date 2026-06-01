@@ -23,6 +23,14 @@ function isValidIgn(ign) {
   return /^[A-Za-z0-9_]{3,16}$/.test(ign);
 }
 
+function isValidDiscord(value) {
+  const v = String(value || '').trim();
+  if (v.length < 2 || v.length > 64) return false;
+  if (/^\d{17,20}$/.test(v)) return true;
+  if (/^<@!?\d{17,20}>$/.test(v)) return true;
+  return /^@?[\w.\-]{2,32}$/.test(v);
+}
+
 export async function onRequestPost({ request, env }) {
   const montyUrl = env.MONTY_API_URL;
   const montySecret = env.MONTY_API_SECRET;
@@ -70,6 +78,10 @@ export async function onRequestPost({ request, env }) {
 
   if (!item) {
     return json({ error: 'Please select or describe what you need.' }, 400);
+  }
+
+  if (!isValidDiscord(discord)) {
+    return json({ error: 'Enter your Discord username (required so we can contact you).' }, 400);
   }
 
   const montyBaseUrl = String(montyUrl || '').match(/^https?:\/\//)

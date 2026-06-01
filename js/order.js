@@ -244,8 +244,16 @@
       return;
     }
 
-    const pricing = CatalogAPI.calculateOrderPrice(catalog, selectedType, itemInput.value.trim());
     const formData = new FormData(form);
+    const discord = String(formData.get('discord') || '').trim();
+    if (!discord || discord.length < 2) {
+      orderStatus.textContent = 'Enter your Discord username so we can contact you.';
+      orderStatus.classList.add('error');
+      document.getElementById('orderDiscord')?.focus();
+      return;
+    }
+
+    const pricing = CatalogAPI.calculateOrderPrice(catalog, selectedType, itemInput.value.trim());
     const payload = {
       ign: formData.get('ign'),
       orderType: orderTypeInput.value,

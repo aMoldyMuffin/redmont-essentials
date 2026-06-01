@@ -3,11 +3,11 @@ import {
   Client,
   GatewayIntentBits,
   REST,
-  Routes,
-  SlashCommandBuilder,
   EmbedBuilder,
   ActivityType,
 } from 'discord.js';
+import { STAFF_COMMAND_NAMES, registerGuildCommands } from './commands.js';
+import { notifyCustomerOrderClaimed } from './notifications.js';
 import { startApiServer } from './api.js';
 import { getCatalog, buildKitsEmbed } from './catalog.js';
 import {
@@ -45,7 +45,7 @@ if (!ordersChannelId) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 function isStaff(member) {
@@ -55,31 +55,18 @@ function isStaff(member) {
   return false;
 }
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName('shop')
-    .setDescription('Redmont Essentials shop info'),
-  new SlashCommandBuilder()
-    .setName('kits')
-    .setDescription('List starter gear kits'),
-  new SlashCommandBuilder()
-    .setName('leaderboard')
-    .setDescription('Staff leaderboard by order weight points'),
-  new SlashCommandBuilder()
-    .setName('mystats')
-    .setDescription('Your order claim stats'),
-  new SlashCommandBuilder()
-    .setName('orders')
-    .setDescription('How many orders are waiting to be claimed'),
-  new SlashCommandBuilder()
-    .setName('order')
-    .setDescription('Place an order through Monty (same as the website)'),
-].map((c) => c.toJSON());
+function requireStaff(interaction) {
+  if (isStaff(interaction.member)) return true;
+  interaction.reply({
+    content: 'That command is for staff only. Customers can use **/order** to place an order.',
+    ephemeral: true,
+  });
+  return false;
+}
 
 async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(token);
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-  console.log('Monty slash commands registered.');
+  await registerGuildCommands(rest, { clientId, guildId, staffRoleId });
 }
 
 function formatLeaderboard(rows) {
@@ -173,10 +160,18 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [buildOrderEmbed(claimed, { claimed: true })],
         components: [buildClaimButton(orderId, true)],
       });
+
+      notifyCustomerOrderClaimed(client, guildId, claimed, interaction.user).catch((err) =>
+        console.warn('Claim notification failed:', err.message)
+      );
       return;
     }
 
     if (!interaction.isChatInputCommand()) return;
+
+    if (STAFF_COMMAND_NAMES.has(interaction.commandName) && !requireStaff(interaction)) {
+      return;
+    }
 
     if (interaction.commandName === 'shop') {
       await interaction.reply({

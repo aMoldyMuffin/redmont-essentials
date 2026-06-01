@@ -107,13 +107,19 @@ export function startApiServer(client, { port, secret, adminSecret, ordersChanne
       return;
     }
 
+    const discord = String(data.discord || '').trim();
+    if (!discord || discord.length < 2) {
+      json(res, { error: 'Discord username is required.' }, 400);
+      return;
+    }
+
     try {
       const result = await processWebsiteOrder(client, ordersChannelId, {
         ign,
         orderType,
         item,
         notes: data.notes,
-        discord: data.discord,
+        discord,
         price: data.price,
         priceDisplay: data.priceDisplay,
         source: data.source || 'website',

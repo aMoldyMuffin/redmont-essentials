@@ -17,7 +17,7 @@
 
 1. [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it **Monty**
 2. **Bot** tab → **Add Bot** → copy token
-3. Enable **Message Content Intent** is NOT needed; enable **Server Members Intent** only if you use role checks heavily
+3. Enable **Server Members Intent** (required for claim DMs by username lookup and staff role checks)
 4. **OAuth2 → URL Generator** → scopes: `bot`, `applications.commands`
    - Permissions: Send Messages, Embed Links, Use External Emojis
 5. Invite Monty to your Redmont Essentials server
@@ -94,20 +94,16 @@ Restart Monty after changing weights.
 
 ## Commands
 
-| Command | Description |
+| Command | Who can use |
 |---------|-------------|
-| `/leaderboard` | Top staff by weighted points |
-| `/mystats` | Your claim stats |
-| `/orders` | Open orders waiting |
-| `/shop` | Shop & website link |
-| `/kits` | Gear kit list with prices |
-| `/order` | Place an order in Discord (buttons & menus) |
+| `/order` | **Everyone** — place an order |
+| `/leaderboard`, `/mystats`, `/orders`, `/shop`, `/kits` | **Staff only** (Manage Messages or `STAFF_ROLE_ID`) |
 
 ## How claiming works
 
-1. Customer submits order on website
+1. Customer submits order (website or `/order`) with Minecraft IGN + Discord username
 2. Monty posts embed in `#website-orders` with **Claim Order** button
-3. Staff clicks Claim → order assigned to them, points added
-4. Embed updates to show who claimed it
+3. Staff clicks Claim → order assigned, points added, embed updates
+4. Monty **DMs the customer** on Discord when their order is claimed (needs Server Members Intent)
 
 Points = sum of item weights from `config/weights.json`.

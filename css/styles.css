@@ -901,6 +901,12 @@ body {
   flex-direction: column;
 }
 
+.field-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .order-honeypot {
   position: absolute;
   left: -9999px;
