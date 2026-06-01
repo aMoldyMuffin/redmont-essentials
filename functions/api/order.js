@@ -72,9 +72,14 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Please select or describe what you need.' }, 400);
   }
 
+  const montyBaseUrl = String(montyUrl || '').match(/^https?:\/\//)
+    ? String(montyUrl)
+    : `https://${String(montyUrl || '')}`;
+  const montyEndpoint = `${montyBaseUrl.replace(/\/$/, '')}/api/order`;
+
   let montyRes;
   try {
-    montyRes = await fetch(`${montyUrl.replace(/\/$/, '')}/api/order`, {
+    montyRes = await fetch(montyEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,10 +90,7 @@ export async function onRequestPost({ request, env }) {
   } catch (err) {
     return json(
       {
-        error: `Could not reach Monty at ${montyUrl.replace(
-          /\/$/,
-          ''
-        )}/api/order. ${err?.message ? `(${err.message})` : ''}`,
+        error: `Could not reach Monty at ${montyEndpoint}. ${err?.message ? `(${err.message})` : ''}`,
       },
       503
     );
