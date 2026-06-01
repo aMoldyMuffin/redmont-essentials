@@ -11,6 +11,7 @@ const SITE_CONFIG = {
 
   // Order form API (Cloudflare Pages Function when deployed)
   orderApiUrl: '/api/order',
+  catalogApiUrl: '/api/catalog',
 
   inGameCompanyName: 'Redmont Essentials',
 };

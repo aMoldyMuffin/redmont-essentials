@@ -950,6 +950,130 @@ body {
   font-weight: 600;
 }
 
+.order-total-bar {
+  margin: 1.5rem 0 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.order-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.order-total-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.order-total-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gold-400);
+}
+
+.order-total-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chip-price,
+.kit-price {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gold-400);
+}
+
+.chip-lg .chip-price {
+  margin-top: 0.5rem;
+}
+
+.catalog-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Admin panel */
+.admin-page .admin-main {
+  max-width: 900px;
+  padding: 6rem 1.5rem 4rem;
+}
+
+.admin-intro {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.admin-intro code {
+  color: var(--gold-400);
+}
+
+.admin-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-card label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.admin-card input[type='password'] {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-editor {
+  width: 100%;
+  min-height: 420px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--navy-950);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+.admin-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.admin-status.success {
+  color: #4ade80;
+}
+
+.admin-status.error {
+  color: #f87171;
+}
+
 .order-success {
   text-align: center;
   padding: 2rem 1rem;

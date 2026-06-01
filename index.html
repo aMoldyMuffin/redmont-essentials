@@ -82,47 +82,13 @@
     <!-- Gear Kits -->
     <section class="section" id="kits">
       <div class="container">
-        <div class="section-header reveal">
+        <div class="section-header reveal" data-catalog-header>
           <span class="section-tag">Starter Packages</span>
           <h2>Gear Kits</h2>
           <p>Curated kits so you can skip the grind and jump straight into Redmont life.</p>
         </div>
-        <div class="cards-grid">
-          <article class="card kit-card reveal">
-            <div class="card-icon">🎒</div>
-            <h3>Survival Starter</h3>
-            <p>Tools, food, and basics to survive your first days in the city.</p>
-            <ul class="card-list">
-              <li>Stone tools set</li>
-              <li>Starter food bundle</li>
-              <li>Torch &amp; building blocks</li>
-            </ul>
-            <a href="order.html?type=Gear%20Kit&item=Survival%20Starter" class="btn btn-card">Order Now</a>
-          </article>
-          <article class="card kit-card featured reveal reveal-delay">
-            <div class="card-badge">Most Popular</div>
-            <div class="card-icon">⚔️</div>
-            <h3>Adventurer Kit</h3>
-            <p>Everything a new player needs — tools, armor, and supplies in one chest.</p>
-            <ul class="card-list">
-              <li>Iron armor &amp; sword</li>
-              <li>Pickaxe, axe, shovel</li>
-              <li>Crafting table &amp; furnace</li>
-              <li>Food &amp; torches</li>
-            </ul>
-            <a href="order.html?type=Gear%20Kit&item=Adventurer%20Kit" class="btn btn-primary btn-card">Order Now</a>
-          </article>
-          <article class="card kit-card reveal reveal-delay-2">
-            <div class="card-icon">🏗️</div>
-            <h3>Builder Bundle</h3>
-            <p>Blocks and materials to set up your first plot or apartment.</p>
-            <ul class="card-list">
-              <li>Common building blocks</li>
-              <li>Glass &amp; doors</li>
-              <li>Interior decor basics</li>
-            </ul>
-            <a href="order.html?type=Gear%20Kit&item=Builder%20Bundle" class="btn btn-card">Order Now</a>
-          </article>
+        <div class="cards-grid" data-kits-grid>
+          <p class="catalog-loading">Loading kits…</p>
         </div>
         <p class="section-note reveal">Prices vary — <a href="order.html">order online</a> or visit our in-game shop for current rates.</p>
       </div>
@@ -137,7 +103,7 @@
           <p>We trade common goods through in-game chest shops. Fair prices, fast service.</p>
         </div>
         <div class="trade-grid">
-          <div class="trade-panel reveal">
+          <div class="trade-panel reveal" data-trade-panel>
             <h3>We Sell</h3>
             <div class="trade-tags">
               <span>Ores &amp; Ingots</span>
@@ -148,7 +114,7 @@
               <span>Decor Items</span>
             </div>
           </div>
-          <div class="trade-panel reveal reveal-delay">
+          <div class="trade-panel reveal reveal-delay" data-trade-panel>
             <h3>We Buy</h3>
             <div class="trade-tags">
               <span>Raw Materials</span>
@@ -261,6 +227,8 @@
 
   <script src="js/config.js"></script>
   <script src="js/shared.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/home-catalog.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

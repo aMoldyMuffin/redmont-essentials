@@ -85,8 +85,17 @@ export async function onRequestPost({ request, env }) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${montySecret}`,
       },
-      body: JSON.stringify({ ign, orderType, item, notes, discord }),
-    });
+    body: JSON.stringify({
+      ign,
+      orderType,
+      item,
+      notes,
+      discord,
+      price: body.price,
+      priceDisplay: body.priceDisplay,
+      source: 'website',
+    }),
+  });
   } catch (err) {
     return json(
       {

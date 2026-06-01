@@ -1,0 +1,74 @@
+{
+  "currency": "$",
+  "currencySuffix": "",
+  "kitsSection": {
+    "tag": "Starter Packages",
+    "title": "Gear Kits",
+    "subtitle": "Curated kits so you can skip the grind and jump straight into Redmont life."
+  },
+  "orderTypes": [
+    { "id": "Gear Kit", "label": "Gear Kit", "icon": "🎒", "desc": "Starter kits for new players" },
+    { "id": "Buy Items", "label": "Buy Items", "icon": "🛒", "desc": "Purchase goods from our shop" },
+    { "id": "Sell Items", "label": "Sell Items", "icon": "💰", "desc": "Sell materials to us" },
+    { "id": "Other", "label": "Other", "icon": "💬", "desc": "Custom request" }
+  ],
+  "kits": [
+    {
+      "id": "Survival Starter",
+      "icon": "🎒",
+      "description": "Tools, food, and basics to survive your first days in the city.",
+      "shortDesc": "Tools, food & basics",
+      "price": 2500,
+      "featured": false,
+      "bullets": ["Stone tools set", "Starter food bundle", "Torch & building blocks"]
+    },
+    {
+      "id": "Adventurer Kit",
+      "icon": "⚔️",
+      "description": "Everything a new player needs — tools, armor, and supplies in one chest.",
+      "shortDesc": "Armor, tools & supplies",
+      "price": 7500,
+      "featured": true,
+      "bullets": ["Iron armor & sword", "Pickaxe, axe, shovel", "Crafting table & furnace", "Food & torches"]
+    },
+    {
+      "id": "Builder Bundle",
+      "icon": "🏗️",
+      "description": "Blocks and materials to set up your first plot or apartment.",
+      "shortDesc": "Blocks & decor",
+      "price": 5000,
+      "featured": false,
+      "bullets": ["Common building blocks", "Glass & doors", "Interior decor basics"]
+    },
+    {
+      "id": "Custom Kit",
+      "icon": "✨",
+      "description": "Tell us what you need and we'll quote it.",
+      "shortDesc": "Tell us what you need",
+      "price": 0,
+      "featured": false,
+      "bullets": ["Custom items", "Flexible pricing", "Message us your list"]
+    }
+  ],
+  "categories": [
+    { "id": "Ores & Ingots", "price": 500 },
+    { "id": "Farming Goods", "price": 300 },
+    { "id": "Building Blocks", "price": 400 },
+    { "id": "Food & Supplies", "price": 250 },
+    { "id": "Tools", "price": 600 },
+    { "id": "Decor Items", "price": 350 },
+    { "id": "Bulk Resources", "price": 800 },
+    { "id": "Other", "price": 200 }
+  ],
+  "trade": {
+    "sellTitle": "We Sell",
+    "buyTitle": "We Buy",
+    "sellTags": ["Ores & Ingots", "Farming Goods", "Building Blocks", "Food & Supplies", "Tools", "Decor Items"],
+    "buyTags": ["Raw Materials", "Crops & Animal Products", "Common Drops", "Bulk Resources"]
+  },
+  "pricing": {
+    "sellMultiplier": 0.8,
+    "customKitNote": "Custom kits are quoted after review",
+    "otherNote": "Quoted after review"
+  }
+}

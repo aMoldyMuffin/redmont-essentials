@@ -1,10 +1,28 @@
 import { createServer } from 'node:http';
+import { getCatalog, saveCatalog } from './catalog.js';
 import { processWebsiteOrder } from './orders.js';
 
-export function startApiServer(client, { port, secret, ordersChannelId }) {
+function json(res, data, status = 200) {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+}
+
+async function readBody(req) {
+  let body = '';
+  for await (const chunk of req) body += chunk;
+  return body;
+}
+
+function checkSecret(req, data, secret) {
+  const authHeader = req.headers.authorization?.replace('Bearer ', '');
+  const providedSecret = authHeader || data?.secret;
+  return secret && providedSecret === secret;
+}
+
+export function startApiServer(client, { port, secret, adminSecret, ordersChannelId }) {
   const server = createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
@@ -13,41 +31,65 @@ export function startApiServer(client, { port, secret, ordersChannelId }) {
       return;
     }
 
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, service: 'monty' }));
+    const url = req.url?.split('?')[0];
+
+    if (req.method === 'GET' && (url === '/' || url === '/health')) {
+      json(res, { ok: true, service: 'monty' });
       return;
     }
 
-    if (req.method !== 'POST' || req.url !== '/api/order') {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Not found' }));
+    if (req.method === 'GET' && url === '/api/catalog') {
+      json(res, { ok: true, catalog: getCatalog() });
       return;
     }
 
-    let body = '';
-    for await (const chunk of req) body += chunk;
+    if (url === '/api/admin/catalog' && (req.method === 'PUT' || req.method === 'POST')) {
+      const body = await readBody(req);
+      let data;
+      try {
+        data = JSON.parse(body);
+      } catch {
+        json(res, { error: 'Invalid JSON' }, 400);
+        return;
+      }
 
+      const adminKey = adminSecret || secret;
+      if (!checkSecret(req, data, adminKey)) {
+        json(res, { error: 'Unauthorized' }, 401);
+        return;
+      }
+
+      if (!data.catalog || typeof data.catalog !== 'object') {
+        json(res, { error: 'Missing catalog object' }, 400);
+        return;
+      }
+
+      saveCatalog(data.catalog);
+      json(res, { ok: true, catalog: getCatalog() });
+      return;
+    }
+
+    if (req.method !== 'POST' || url !== '/api/order') {
+      json(res, { error: 'Not found' }, 404);
+      return;
+    }
+
+    const body = await readBody(req);
     let data;
     try {
       data = JSON.parse(body);
     } catch {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      json(res, { error: 'Invalid JSON' }, 400);
       return;
     }
 
-    const authHeader = req.headers.authorization?.replace('Bearer ', '');
-    const providedSecret = authHeader || data.secret;
-    if (!secret || providedSecret !== secret) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
+    if (!checkSecret(req, data, secret)) {
+      json(res, { error: 'Unauthorized' }, 401);
       return;
     }
 
     if (data.website) {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true }));
+      json(res, { ok: true });
       return;
     }
 
@@ -56,14 +98,12 @@ export function startApiServer(client, { port, secret, ordersChannelId }) {
     const item = String(data.item || data.kit || '').trim();
 
     if (!/^[A-Za-z0-9_]{3,16}$/.test(ign)) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid Minecraft username.' }));
+      json(res, { error: 'Invalid Minecraft username.' }, 400);
       return;
     }
 
     if (!orderType || !item) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Missing order details.' }));
+      json(res, { error: 'Missing order details.' }, 400);
       return;
     }
 
@@ -74,20 +114,19 @@ export function startApiServer(client, { port, secret, ordersChannelId }) {
         item,
         notes: data.notes,
         discord: data.discord,
+        price: data.price,
+        priceDisplay: data.priceDisplay,
+        source: data.source || 'website',
       });
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({
-          ok: true,
-          message: 'Order sent! Staff will claim it on Discord.',
-          orderId: result.id,
-        })
-      );
+      json(res, {
+        ok: true,
+        message: 'Order sent! Staff will claim it on Discord.',
+        orderId: result.id,
+      });
     } catch (err) {
       console.error('Order API error:', err);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Could not post order to Discord.' }));
+      json(res, { error: 'Could not post order to Discord.' }, 502);
     }
   });
 

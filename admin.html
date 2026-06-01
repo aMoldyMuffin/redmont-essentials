@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Admin | Redmont Essentials</title>
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="admin-page">
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <main class="admin-main container">
+    <a href="index.html" class="back-link">← Back to site</a>
+    <h1>Shop admin</h1>
+    <p class="admin-intro">
+      Edit kits, categories, and prices. Changes apply to the homepage, order page, and Discord <code>/order</code>.
+      Set <strong>ADMIN_SECRET</strong> in Cloudflare and Railway (same value).
+    </p>
+
+    <p class="admin-status" id="adminStatus" role="status"></p>
+
+    <div id="adminLogin" class="admin-card">
+      <label for="adminToken">Admin secret</label>
+      <input type="password" id="adminToken" autocomplete="current-password" placeholder="ADMIN_SECRET value" />
+      <button type="button" class="btn btn-primary" id="adminLoginBtn">Log in</button>
+    </div>
+
+    <div id="adminPanel" class="admin-card" hidden>
+      <div class="admin-toolbar">
+        <button type="button" class="btn btn-primary" id="adminSaveBtn">Save catalog</button>
+        <button type="button" class="btn btn-outline" id="adminReloadBtn">Reload</button>
+        <button type="button" class="btn btn-outline" id="adminLogoutBtn">Log out</button>
+      </div>
+      <p class="admin-hint">
+        <strong>Prices:</strong> edit <code>price</code> on each kit/category. Currency symbol: <code>currency</code>.
+        Sell orders use <code>pricing.sellMultiplier</code> (e.g. 0.8 = 80% of buy price).
+      </p>
+      <textarea id="catalogEditor" class="admin-editor" spellcheck="false"></textarea>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

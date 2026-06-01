@@ -84,6 +84,7 @@ Full setup guide: [`discord-bot/README.md`](discord-bot/README.md)
 |------|--------|
 | `MONTY_API_URL` | Your Railway URL, e.g. `https://monty-production.up.railway.app` |
 | `MONTY_API_SECRET` | Same random secret in Monty's `.env` |
+| `ADMIN_SECRET` | Password for `/admin.html` shop editor (optional; defaults to `MONTY_API_SECRET`) |
 
 4. **Redeploy** Cloudflare after saving
 

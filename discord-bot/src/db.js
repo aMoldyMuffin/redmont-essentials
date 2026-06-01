@@ -35,14 +35,28 @@ db.exec(`
     orders_claimed INTEGER NOT NULL DEFAULT 0,
     total_weight REAL NOT NULL DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `);
+
+try {
+  db.exec(`ALTER TABLE orders ADD COLUMN price REAL`);
+} catch {
+  /* column may already exist */
+}
 
 export function createOrder(order) {
   const stmt = db.prepare(`
-    INSERT INTO orders (id, ign, order_type, item, weight, notes, customer_discord, created_at)
-    VALUES (@id, @ign, @orderType, @item, @weight, @notes, @customerDiscord, @createdAt)
+    INSERT INTO orders (id, ign, order_type, item, weight, price, notes, customer_discord, created_at)
+    VALUES (@id, @ign, @orderType, @item, @weight, @price, @notes, @customerDiscord, @createdAt)
   `);
-  stmt.run(order);
+  stmt.run({
+    ...order,
+    price: order.price ?? 0,
+  });
 }
 
 export function getOrder(id) {

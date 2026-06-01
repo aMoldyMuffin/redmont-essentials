@@ -1,35 +1,10 @@
 /**
- * Order page — dynamic fields & chip selectors
+ * Order page — catalog-driven fields, pricing total
  */
 (function () {
   'use strict';
 
   const config = typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG : {};
-
-  const ORDER_TYPES = [
-    { id: 'Gear Kit', label: 'Gear Kit', icon: '🎒', desc: 'Starter kits for new players' },
-    { id: 'Buy Items', label: 'Buy Items', icon: '🛒', desc: 'Purchase goods from our shop' },
-    { id: 'Sell Items', label: 'Sell Items', icon: '💰', desc: 'Sell materials to us' },
-    { id: 'Other', label: 'Other', icon: '💬', desc: 'Custom request' },
-  ];
-
-  const KITS = [
-    { id: 'Survival Starter', desc: 'Tools, food & basics' },
-    { id: 'Adventurer Kit', desc: 'Armor, tools & supplies' },
-    { id: 'Builder Bundle', desc: 'Blocks & decor' },
-    { id: 'Custom Kit', desc: 'Tell us what you need' },
-  ];
-
-  const SHOP_CATEGORIES = [
-    'Ores & Ingots',
-    'Farming Goods',
-    'Building Blocks',
-    'Food & Supplies',
-    'Tools',
-    'Decor Items',
-    'Bulk Resources',
-    'Other',
-  ];
 
   const form = document.getElementById('orderForm');
   if (!form) return;
@@ -43,20 +18,56 @@
   const orderStatus = document.getElementById('orderStatus');
   const orderSubmit = document.getElementById('orderSubmit');
   const successScreen = document.getElementById('orderSuccess');
+  const orderTotalEl = document.getElementById('orderTotal');
 
+  let catalog = null;
   let selectedType = 'Gear Kit';
   let selectedItems = new Set();
 
+  function formatPrice(amount) {
+    return CatalogAPI.formatMoney(catalog, amount);
+  }
+
+  function categoryPrice(catId) {
+    const cat = catalog.categories.find((c) => c.id === catId);
+    if (!cat) return 0;
+    if (selectedType === 'Sell Items') {
+      return Math.round(cat.price * (catalog.pricing?.sellMultiplier ?? 0.8));
+    }
+    return cat.price;
+  }
+
+  function updateOrderTotal() {
+    syncItemInput();
+    if (!orderTotalEl || !catalog) return;
+
+    const itemText = itemInput.value.trim();
+    if (!itemText) {
+      orderTotalEl.innerHTML = '<span class="order-total-label">Estimated total</span><span class="order-total-value">—</span>';
+      return;
+    }
+
+    const pricing = CatalogAPI.calculateOrderPrice(catalog, selectedType, itemText);
+    orderTotalEl.innerHTML = `
+      <span class="order-total-label">Estimated total</span>
+      <span class="order-total-value">${pricing.display}</span>
+    `;
+    orderTotalEl.dataset.price = String(pricing.total);
+    orderTotalEl.dataset.display = pricing.display;
+  }
+
   function renderTypeGrid() {
-    typeGrid.innerHTML = ORDER_TYPES.map(
-      (t) => `
+    typeGrid.innerHTML = catalog.orderTypes
+      .map(
+        (t) => `
         <button type="button" class="choice-card ${t.id === selectedType ? 'selected' : ''}" data-type="${t.id}">
           <span class="choice-icon">${t.icon}</span>
           <span class="choice-label">${t.label}</span>
           <span class="choice-desc">${t.desc}</span>
         </button>
       `
-    ).join('');
+      )
+      .join('');
 
     typeGrid.querySelectorAll('.choice-card').forEach((btn) => {
       btn.addEventListener('click', () => setOrderType(btn.dataset.type));
@@ -74,11 +85,12 @@
       detailHint.textContent = 'Select the starter package you want';
       detailPanel.innerHTML = `
         <div class="chip-grid chip-grid-kits" id="detailOptions">
-          ${KITS.map(
+          ${catalog.kits.map(
             (k) => `
               <button type="button" class="chip chip-lg" data-value="${k.id}">
                 <span class="chip-title">${k.id}</span>
-                <span class="chip-sub">${k.desc}</span>
+                <span class="chip-sub">${k.shortDesc}</span>
+                <span class="chip-price">${k.price > 0 ? formatPrice(k.price) : 'Quote'}</span>
               </button>
             `
           ).join('')}
@@ -86,11 +98,20 @@
       `;
       bindSingleSelect(detailPanel.querySelector('#detailOptions'));
     } else if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
-      detailLabel.textContent = selectedType === 'Buy Items' ? 'What do you want to buy?' : 'What are you selling?';
+      detailLabel.textContent =
+        selectedType === 'Buy Items' ? 'What do you want to buy?' : 'What are you selling?';
       detailHint.textContent = 'Pick one or more — tap again to deselect';
       detailPanel.innerHTML = `
         <div class="chip-grid" id="detailOptions">
-          ${SHOP_CATEGORIES.map((c) => `<button type="button" class="chip" data-value="${c}">${c}</button>`).join('')}
+          ${catalog.categories
+            .map((c) => {
+              const p = categoryPrice(c.id);
+              return `<button type="button" class="chip" data-value="${c.id}">
+                <span class="chip-title">${c.id}</span>
+                <span class="chip-price">${formatPrice(p)}</span>
+              </button>`;
+            })
+            .join('')}
         </div>
         <div class="form-row form-row-spaced">
           <label for="customItem">Specific items <span class="optional">(optional)</span></label>
@@ -100,7 +121,7 @@
       bindMultiSelect(detailPanel.querySelector('#detailOptions'));
     } else {
       detailLabel.textContent = 'Describe your request';
-      detailHint.textContent = 'Tell us what you need and we will get back to you';
+      detailHint.textContent = catalog.pricing?.otherNote || 'Tell us what you need';
       detailPanel.innerHTML = `
         <div class="form-row">
           <textarea id="otherRequest" rows="4" maxlength="200" placeholder="What can we help you with?" required></textarea>
@@ -108,7 +129,7 @@
       `;
     }
 
-    syncItemInput();
+    updateOrderTotal();
   }
 
   function bindSingleSelect(container) {
@@ -118,7 +139,7 @@
         chip.classList.add('selected');
         selectedItems.clear();
         selectedItems.add(chip.dataset.value);
-        syncItemInput();
+        updateOrderTotal();
       });
     });
   }
@@ -134,7 +155,7 @@
           selectedItems.add(val);
           chip.classList.add('selected');
         }
-        syncItemInput();
+        updateOrderTotal();
       });
     });
   }
@@ -173,7 +194,7 @@
     const type = params.get('type');
     const item = params.get('item');
 
-    if (type && ORDER_TYPES.some((t) => t.id === type)) {
+    if (type && catalog.orderTypes.some((t) => t.id === type)) {
       selectedType = type;
       orderTypeInput.value = type;
     }
@@ -184,29 +205,29 @@
     if (item) {
       requestAnimationFrame(() => {
         if (selectedType === 'Gear Kit') {
-          const chip = detailPanel.querySelector(`[data-value="${item}"]`);
+          const chip = detailPanel.querySelector(`[data-value="${CSS.escape(item)}"]`);
           if (chip) chip.click();
         } else if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
           item.split(',').forEach((part) => {
-            const chip = detailPanel.querySelector(`[data-value="${part.trim()}"]`);
+            const chip = detailPanel.querySelector(`[data-value="${CSS.escape(part.trim())}"]`);
             if (chip) chip.click();
           });
           const custom = document.getElementById('customItem');
-          if (custom && !detailPanel.querySelector(`[data-value="${item.trim()}"]`)) {
+          if (custom && !detailPanel.querySelector(`[data-value="${CSS.escape(item.trim())}"]`)) {
             custom.value = item;
-            syncItemInput();
+            updateOrderTotal();
           }
         } else {
           const other = document.getElementById('otherRequest');
           if (other) other.value = item;
-          syncItemInput();
+          updateOrderTotal();
         }
       });
     }
   }
 
   detailPanel.addEventListener('input', (e) => {
-    if (e.target.matches('#customItem, #otherRequest')) syncItemInput();
+    if (e.target.matches('#customItem, #otherRequest')) updateOrderTotal();
   });
 
   form.addEventListener('submit', async (e) => {
@@ -223,6 +244,7 @@
       return;
     }
 
+    const pricing = CatalogAPI.calculateOrderPrice(catalog, selectedType, itemInput.value.trim());
     const formData = new FormData(form);
     const payload = {
       ign: formData.get('ign'),
@@ -231,6 +253,8 @@
       discord: formData.get('discord'),
       notes: formData.get('notes'),
       website: formData.get('website'),
+      price: pricing.total,
+      priceDisplay: pricing.display,
     };
 
     orderSubmit.disabled = true;
@@ -247,7 +271,7 @@
         if (res.status === 503) {
           const discordUrl = config.discordInviteUrl || 'https://discord.gg/YEK4K2cY7n';
           const msg = data?.error || "Monty isn't connected yet.";
-          orderStatus.innerHTML = `${msg} <a href="${discordUrl}" target="_blank" rel="noopener">Order on Discord</a> for now — staff are setting up the bot.`;
+          orderStatus.innerHTML = `${msg} <a href="${discordUrl}" target="_blank" rel="noopener">Order on Discord</a> for now — use <code>/order</code> in the server.`;
           orderStatus.classList.add('error');
           return;
         }
@@ -256,6 +280,7 @@
 
       form.hidden = true;
       document.querySelector('.order-page-intro')?.classList.add('hidden');
+      document.getElementById('orderTotalBar')?.classList.add('hidden');
       successScreen.hidden = false;
       successScreen.classList.add('visible');
     } catch (err) {
@@ -267,5 +292,13 @@
     }
   });
 
-  preselectFromUrl();
+  CatalogAPI.fetchCatalog()
+    .then((c) => {
+      catalog = c;
+      preselectFromUrl();
+    })
+    .catch((err) => {
+      orderStatus.textContent = err.message;
+      orderStatus.classList.add('error');
+    });
 })();

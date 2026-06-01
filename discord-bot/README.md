@@ -35,6 +35,7 @@ Fill in:
 - `ORDERS_CHANNEL_ID` — right-click your `#website-orders` channel → Copy ID
 - `STAFF_ROLE_ID` — role that can claim orders (optional if staff have Manage Messages)
 - `MONTY_API_SECRET` — long random string (e.g. `openssl rand -hex 32`)
+- `ADMIN_SECRET` — optional; for `/admin.html` catalog editor (defaults to `MONTY_API_SECRET`)
 - `WEBSITE_URL` — your Cloudflare Pages URL
 
 ### 3. Run locally (testing)
@@ -89,7 +90,8 @@ Restart Monty after changing weights.
 | `/mystats` | Your claim stats |
 | `/orders` | Open orders waiting |
 | `/shop` | Shop & website link |
-| `/kits` | Gear kit list with weights |
+| `/kits` | Gear kit list with prices |
+| `/order` | Place an order in Discord (buttons & menus) |
 
 ## How claiming works
 

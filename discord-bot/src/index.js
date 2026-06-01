@@ -9,8 +9,14 @@ import {
   ActivityType,
 } from 'discord.js';
 import { startApiServer } from './api.js';
+import { getCatalog, buildKitsEmbed } from './catalog.js';
 import { claimOrder, getLeaderboard, getStaffStats, getOpenOrderCount } from './db.js';
 import { buildOrderEmbed, buildClaimButton } from './orders.js';
+import {
+  buildOrderStartEmbed,
+  buildOrderStartRow,
+  handleDiscordOrderInteraction,
+} from './discord-order.js';
 
 const token = process.env.DISCORD_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -20,6 +26,7 @@ const ordersChannelId = process.env.ORDERS_CHANNEL_ID;
 const websiteUrl = process.env.WEBSITE_URL || 'https://example.com';
 const apiPort = Number(process.env.PORT || process.env.API_PORT || 3847);
 const apiSecret = process.env.MONTY_API_SECRET;
+const adminSecret = process.env.ADMIN_SECRET || apiSecret;
 
 if (!token || !guildId || !clientId) {
   console.error('Missing DISCORD_TOKEN, DISCORD_GUILD_ID, or DISCORD_CLIENT_ID');
@@ -57,6 +64,9 @@ const commands = [
   new SlashCommandBuilder()
     .setName('orders')
     .setDescription('How many orders are waiting to be claimed'),
+  new SlashCommandBuilder()
+    .setName('order')
+    .setDescription('Place an order through Monty (same as the website)'),
 ].map((c) => c.toJSON());
 
 async function registerCommands() {
@@ -81,7 +91,12 @@ client.once('ready', () => {
   client.user.setActivity('Redmont Essentials orders', { type: ActivityType.Watching });
 
   if (apiSecret && ordersChannelId) {
-    startApiServer(client, { port: apiPort, secret: apiSecret, ordersChannelId });
+    startApiServer(client, {
+      port: apiPort,
+      secret: apiSecret,
+      adminSecret,
+      ordersChannelId,
+    });
   } else {
     console.warn('Monty API not started — set MONTY_API_SECRET and ORDERS_CHANNEL_ID');
   }
@@ -89,6 +104,15 @@ client.once('ready', () => {
 
 client.on('interactionCreate', async (interaction) => {
   try {
+    if (
+      (interaction.isButton() && interaction.customId.startsWith('monty_order:')) ||
+      (interaction.isStringSelectMenu() && interaction.customId.startsWith('monty_order:')) ||
+      (interaction.isModalSubmit() && interaction.customId === 'monty_order:modal')
+    ) {
+      const handled = await handleDiscordOrderInteraction(interaction, client, ordersChannelId);
+      if (handled) return;
+    }
+
     if (interaction.isButton() && interaction.customId.startsWith('monty_claim:')) {
       const orderId = interaction.customId.split(':')[1];
 
@@ -137,17 +161,24 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (interaction.commandName === 'kits') {
+      const catalog = getCatalog();
       await interaction.reply({
         embeds: [
           new EmbedBuilder()
             .setColor(0xd4af37)
             .setTitle('Starter Gear Kits')
-            .addFields(
-              { name: '🎒 Survival Starter (1 pt)', value: 'Stone tools, food & basics', inline: false },
-              { name: '⚔️ Adventurer Kit (3 pts)', value: 'Iron armor, tools & supplies', inline: false },
-              { name: '🏗️ Builder Bundle (2 pts)', value: 'Blocks, glass & decor', inline: false },
-            ),
+            .setDescription(buildKitsEmbed(catalog))
+            .setFooter({ text: 'Use /order to purchase · Monty' }),
         ],
+      });
+      return;
+    }
+
+    if (interaction.commandName === 'order') {
+      const catalog = getCatalog();
+      await interaction.reply({
+        embeds: [buildOrderStartEmbed(catalog)],
+        components: [buildOrderStartRow()],
       });
       return;
     }

@@ -99,6 +99,14 @@
 
           <input type="text" name="website" class="order-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+          <div class="order-total-bar" id="orderTotalBar">
+            <div class="order-total" id="orderTotal">
+              <span class="order-total-label">Estimated total</span>
+              <span class="order-total-value">—</span>
+            </div>
+            <p class="order-total-note">Final price may vary for custom or bulk orders. Sell orders use shop buy rates.</p>
+          </div>
+
           <button type="submit" class="btn btn-primary btn-lg order-submit-v2" id="orderSubmit">
             <span class="submit-text">Submit Order</span>
             <span class="submit-loader"></span>
@@ -128,6 +136,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/shared.js"></script>
+  <script src="js/catalog.js"></script>
   <script src="js/order.js"></script>
 </body>
 </html>
