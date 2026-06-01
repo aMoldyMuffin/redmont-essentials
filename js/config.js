@@ -13,9 +13,5 @@ const SITE_CONFIG = {
   orderApiUrl: '/api/order',
   catalogApiUrl: '/api/catalog',
 
-  // Cloudflare Turnstile site key (public) — get from Cloudflare Dashboard → Turnstile
-  // Leave empty to disable verification (not recommended for production)
-  turnstileSiteKey: '0x4AAAAAADc0fsKxdtGc6Go3',
-
   inGameCompanyName: 'Redmont Essentials',
 };

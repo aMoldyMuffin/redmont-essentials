@@ -31,21 +31,6 @@ function isValidDiscord(value) {
   return /^@?[\w.\-]{2,32}$/.test(v);
 }
 
-async function verifyTurnstile(token, secret, remoteip) {
-  const body = new URLSearchParams();
-  body.append('secret', secret);
-  body.append('response', token);
-  if (remoteip) body.append('remoteip', remoteip);
-
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  const data = await res.json().catch(() => ({}));
-  return Boolean(data.success);
-}
-
 export async function onRequestPost({ request, env }) {
   const montyUrl = env.MONTY_API_URL;
   const montySecret = env.MONTY_API_SECRET;
@@ -75,18 +60,6 @@ export async function onRequestPost({ request, env }) {
 
   if (body.website) {
     return json({ ok: true });
-  }
-
-  if (env.TURNSTILE_SECRET_KEY) {
-    const token = String(body.turnstileToken || '').trim();
-    if (!token) {
-      return json({ error: 'Complete the security verification and try again.' }, 403);
-    }
-    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For');
-    const valid = await verifyTurnstile(token, env.TURNSTILE_SECRET_KEY, ip);
-    if (!valid) {
-      return json({ error: 'Security verification failed. Refresh the page and try again.' }, 403);
-    }
   }
 
   const ign = cleanText(body.ign, 16);

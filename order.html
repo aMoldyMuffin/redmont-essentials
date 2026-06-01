@@ -8,7 +8,6 @@
   <link rel="icon" href="logo.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://challenges.cloudflare.com" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -41,17 +40,6 @@
         Back to home
       </a>
 
-      <div id="orderVerify" class="order-card order-verify reveal">
-        <span class="section-tag">Security check</span>
-        <h1>Verify to place an order</h1>
-        <p>Tick the box below (or complete the quick challenge) so we know you're a real person.</p>
-        <div id="turnstileGate" class="turnstile-wrap"></div>
-        <p class="order-status" id="verifyStatus" role="status">Loading security check…</p>
-        <button type="button" class="btn btn-outline verify-retry" id="verifyRetryBtn" hidden>Reload check</button>
-        <p class="field-hint verify-alt">You can also order in our Discord server with <code>/order</code>.</p>
-      </div>
-
-      <div id="orderApp" hidden>
       <div class="order-page-intro reveal">
         <span class="section-tag">Place an Order</span>
         <h1>What do you need?</h1>
@@ -111,7 +99,6 @@
           </div>
 
           <input type="text" name="website" class="order-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <div id="turnstileSubmit" class="turnstile-submit" aria-hidden="true"></div>
 
           <div class="order-total-bar" id="orderTotalBar">
             <div class="order-total" id="orderTotal">
@@ -138,7 +125,6 @@
           </div>
         </div>
       </div>
-      </div>
     </div>
   </main>
 
@@ -152,7 +138,6 @@
   <script src="js/config.js"></script>
   <script src="js/shared.js"></script>
   <script src="js/catalog.js"></script>
-  <script src="js/order-gate.js"></script>
   <script src="js/order.js"></script>
 </body>
 </html>
