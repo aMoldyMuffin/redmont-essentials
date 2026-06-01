@@ -28,10 +28,16 @@ export async function onRequestPost({ request, env }) {
   const montySecret = env.MONTY_API_SECRET;
 
   if (!montyUrl || !montySecret) {
+    const missing = [];
+    if (!montyUrl) missing.push('MONTY_API_URL');
+    if (!montySecret) missing.push('MONTY_API_SECRET');
+
     return json(
       {
         error:
-          'Monty is not connected yet. Staff: deploy the bot and set MONTY_API_URL + MONTY_API_SECRET in Cloudflare.',
+          `Monty is not connected yet. Staff: set ${missing.join(
+            ', '
+          )} in Cloudflare (Settings → Variables and Secrets), then redeploy.`,
       },
       503
     );
@@ -66,14 +72,27 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Please select or describe what you need.' }, 400);
   }
 
-  const montyRes = await fetch(`${montyUrl.replace(/\/$/, '')}/api/order`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${montySecret}`,
-    },
-    body: JSON.stringify({ ign, orderType, item, notes, discord }),
-  });
+  let montyRes;
+  try {
+    montyRes = await fetch(`${montyUrl.replace(/\/$/, '')}/api/order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${montySecret}`,
+      },
+      body: JSON.stringify({ ign, orderType, item, notes, discord }),
+    });
+  } catch (err) {
+    return json(
+      {
+        error: `Could not reach Monty at ${montyUrl.replace(
+          /\/$/,
+          ''
+        )}/api/order. ${err?.message ? `(${err.message})` : ''}`,
+      },
+      503
+    );
+  }
 
   const data = await montyRes.json().catch(() => ({}));
 
