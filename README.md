@@ -88,6 +88,21 @@ Full setup guide: [`discord-bot/README.md`](discord-bot/README.md)
 
 4. **Redeploy** Cloudflare after saving
 
+## Shared inventory → Eleanor (Discord bot)
+
+**Eleanor** is a separate bot that keeps a live **raw materials ledger** on Discord (Iron, Diamonds, Gold, Netherite). Staff use **Adjust stock** buttons to add/remove counts; everyone sees the updated embed.
+
+Full setup: [`eleanor-bot/README.md`](eleanor-bot/README.md)
+
+### Cloudflare variables for Eleanor admin
+
+| Name | Value |
+|------|--------|
+| `ELEANOR_API_URL` | Eleanor’s Railway URL |
+| `ELEANOR_API_SECRET` | Same secret in Eleanor’s `.env` (or reuse `ADMIN_SECRET`) |
+
+Edit materials and quantities at **`/admin.html`** → **Inventory (Eleanor)** tab.
+
 ### Weighted leaderboard
 
 Edit `discord-bot/config/weights.json` to set points per kit/item. Harder orders = more points when staff claims them.

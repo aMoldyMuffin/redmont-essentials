@@ -1,0 +1,10 @@
+{
+  "title": "Shared Raw Materials Ledger",
+  "subtitle": "Live stock counts — updated by authorized staff",
+  "materials": [
+    { "id": "iron", "label": "Iron", "emoji": "🔩", "quantity": 0 },
+    { "id": "diamonds", "label": "Diamonds", "emoji": "💎", "quantity": 0 },
+    { "id": "gold", "label": "Gold", "emoji": "🪙", "quantity": 0 },
+    { "id": "netherite", "label": "Netherite", "emoji": "⬛", "quantity": 0 }
+  ]
+}

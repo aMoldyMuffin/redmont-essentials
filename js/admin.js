@@ -3,6 +3,9 @@
 
   const loginEl = document.getElementById('adminLogin');
   const panelEl = document.getElementById('adminPanel');
+  const shopPanelEl = document.getElementById('adminShopPanel');
+  const inventoryPanelEl = document.getElementById('adminInventoryPanel');
+  const tabsEl = document.getElementById('adminTabs');
   const statusEl = document.getElementById('adminStatus');
   const kitsList = document.getElementById('kitsList');
   const categoriesList = document.getElementById('categoriesList');
@@ -24,6 +27,38 @@
   function showStatus(msg, isError) {
     statusEl.textContent = msg;
     statusEl.className = 'admin-status' + (isError ? ' error' : ' success');
+  }
+
+  function getActiveTab() {
+    return tabsEl?.querySelector('.admin-tab.active')?.dataset.tab || 'shop';
+  }
+
+  function setActiveTab(tab) {
+    if (!tabsEl) return;
+    tabsEl.querySelectorAll('.admin-tab').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    if (shopPanelEl) shopPanelEl.hidden = tab !== 'shop';
+    if (inventoryPanelEl) inventoryPanelEl.hidden = tab !== 'inventory';
+  }
+
+  async function reloadActiveTab() {
+    if (getActiveTab() === 'inventory' && window.InventoryAdmin) {
+      await window.InventoryAdmin.load();
+      showStatus('Inventory reloaded from Eleanor.', false);
+      return;
+    }
+    CatalogAPI.clearCache();
+    await loadCatalog();
+    showStatus('Shop catalog reloaded.', false);
+  }
+
+  async function saveActiveTab() {
+    if (getActiveTab() === 'inventory' && window.InventoryAdmin) {
+      await window.InventoryAdmin.save();
+      return;
+    }
+    await saveCatalog();
   }
 
   function esc(s) {
@@ -248,6 +283,34 @@
     }
   });
 
+  tabsEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.admin-tab');
+    if (!btn?.dataset.tab) return;
+    setActiveTab(btn.dataset.tab);
+    showStatus(
+      btn.dataset.tab === 'inventory'
+        ? 'Edit materials and quantities, then Save.'
+        : 'Edit shop fields, then Save.',
+      false
+    );
+  });
+
+  async function afterLogin() {
+    loginEl.hidden = true;
+    panelEl.hidden = false;
+    if (tabsEl) tabsEl.hidden = false;
+    setActiveTab('shop');
+    await loadCatalog();
+    if (window.InventoryAdmin) {
+      try {
+        await window.InventoryAdmin.load();
+      } catch {
+        /* Eleanor optional until configured */
+      }
+    }
+    showStatus('Edit the fields below, then click Save changes.', false);
+  }
+
   document.getElementById('adminLoginBtn')?.addEventListener('click', async () => {
     const token = document.getElementById('adminToken').value.trim();
     if (!token) {
@@ -256,22 +319,17 @@
     }
     setToken(token);
     try {
-      await loadCatalog();
-      loginEl.hidden = true;
-      panelEl.hidden = false;
-      showStatus('Edit the fields below, then click Save changes.', false);
+      await afterLogin();
     } catch (err) {
       setToken('');
-      showStatus(err.message || 'Could not load catalog — check your secret.', true);
+      showStatus(err.message || 'Could not load — check your secret.', true);
     }
   });
 
-  document.getElementById('adminSaveBtn')?.addEventListener('click', saveCatalog);
+  document.getElementById('adminSaveBtn')?.addEventListener('click', saveActiveTab);
   document.getElementById('adminReloadBtn')?.addEventListener('click', async () => {
-    CatalogAPI.clearCache();
     try {
-      await loadCatalog();
-      showStatus('Reloaded from server.', false);
+      await reloadActiveTab();
     } catch (err) {
       showStatus(err.message, true);
     }
@@ -281,15 +339,11 @@
     setToken('');
     loginEl.hidden = false;
     panelEl.hidden = true;
+    if (tabsEl) tabsEl.hidden = true;
     showStatus('', false);
   });
 
   if (getToken()) {
-    loadCatalog()
-      .then(() => {
-        loginEl.hidden = true;
-        panelEl.hidden = false;
-      })
-      .catch(() => setToken(''));
+    afterLogin().catch(() => setToken(''));
   }
 })();

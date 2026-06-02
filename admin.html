@@ -13,10 +13,15 @@
 
   <main class="admin-main container">
     <a href="index.html" class="back-link">← Back to site</a>
-    <h1>Shop admin</h1>
+    <h1>Site admin</h1>
     <p class="admin-intro">
-      Edit what customers see on the website and in Discord <code>/order</code>. Changes apply after you click Save.
+      Edit the shop catalog (Monty) and shared inventory (Eleanor). Changes apply after you click Save.
     </p>
+
+    <nav class="admin-tabs" id="adminTabs" hidden>
+      <button type="button" class="admin-tab active" data-tab="shop">Shop (Monty)</button>
+      <button type="button" class="admin-tab" data-tab="inventory">Inventory (Eleanor)</button>
+    </nav>
 
     <p class="admin-status" id="adminStatus" role="status"></p>
 
@@ -33,6 +38,7 @@
         <button type="button" class="btn btn-outline" id="adminLogoutBtn">Log out</button>
       </div>
 
+      <div id="adminShopPanel" class="admin-tab-panel">
       <form id="adminForm" class="admin-form" novalidate>
         <section class="admin-section admin-card">
           <h2>Prices &amp; settings</h2>
@@ -91,11 +97,39 @@
           <button type="button" class="btn btn-outline btn-sm" id="applyJsonBtn">Apply JSON to form</button>
         </details>
       </form>
+      </div>
+
+      <div id="adminInventoryPanel" class="admin-tab-panel" hidden>
+        <form id="inventoryForm" class="admin-form" novalidate>
+          <section class="admin-section admin-card">
+            <h2>Ledger display</h2>
+            <p class="field-hint">Shown on the live Discord embed Eleanor posts in your inventory channel.</p>
+            <div class="admin-field">
+              <label for="invTitle">Title</label>
+              <input type="text" id="invTitle" maxlength="120" placeholder="Shared Raw Materials Ledger" />
+            </div>
+            <div class="admin-field">
+              <label for="invSubtitle">Subtitle</label>
+              <textarea id="invSubtitle" rows="2" placeholder="Live stock counts"></textarea>
+            </div>
+          </section>
+
+          <section class="admin-section admin-card">
+            <div class="admin-section-head">
+              <h2>Raw materials</h2>
+              <p>Staff adjust counts in Discord with <strong>Adjust stock</strong> on the ledger message.</p>
+            </div>
+            <div id="materialsList" class="admin-items admin-items-compact"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="addMaterialBtn">+ Add material</button>
+          </section>
+        </form>
+      </div>
     </div>
   </main>
 
   <script src="js/config.js"></script>
   <script src="js/catalog.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/admin-inventory.js"></script>
 </body>
 </html>
