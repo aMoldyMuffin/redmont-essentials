@@ -94,8 +94,9 @@
         </div>
         <div class="admin-grid-2">
           <div class="admin-field">
-            <label>Kit name</label>
+            <label>Kit name (display)</label>
             <input type="text" data-kit-id value="${esc(kit.id)}" required maxlength="80" />
+            <span class="field-hint">Shown on the site and Discord. Duplicate names like &quot;Coming Soon&quot; are OK.</span>
           </div>
           <div class="admin-field">
             <label>Icon (emoji)</label>
@@ -167,13 +168,14 @@
   }
 
   function collectKits() {
-    return [...kitsList.querySelectorAll('[data-kit-index]')].map((card) => {
+    const prev = catalogSnapshot?.kits || [];
+    return [...kitsList.querySelectorAll('[data-kit-index]')].map((card, index) => {
       const bulletsRaw = card.querySelector('[data-kit-bullets]')?.value || '';
       const bullets = bulletsRaw
         .split('\n')
         .map((b) => b.trim())
         .filter(Boolean);
-      return {
+      const kit = {
         id: card.querySelector('[data-kit-id]')?.value.trim() || 'Unnamed Kit',
         icon: card.querySelector('[data-kit-icon]')?.value.trim() || '📦',
         description: card.querySelector('[data-kit-desc]')?.value.trim() || '',
@@ -182,14 +184,21 @@
         featured: card.querySelector('[data-kit-featured]')?.checked || false,
         bullets,
       };
+      if (prev[index]?.key) kit.key = prev[index].key;
+      return kit;
     });
   }
 
   function collectCategories() {
-    return [...categoriesList.querySelectorAll('[data-cat-index]')].map((row) => ({
-      id: row.querySelector('[data-cat-id]')?.value.trim() || 'Unnamed',
-      price: Number(row.querySelector('[data-cat-price]')?.value) || 0,
-    }));
+    const prev = catalogSnapshot?.categories || [];
+    return [...categoriesList.querySelectorAll('[data-cat-index]')].map((row, index) => {
+      const cat = {
+        id: row.querySelector('[data-cat-id]')?.value.trim() || 'Unnamed',
+        price: Number(row.querySelector('[data-cat-price]')?.value) || 0,
+      };
+      if (prev[index]?.key) cat.key = prev[index].key;
+      return cat;
+    });
   }
 
   function collectCatalogFromForm() {

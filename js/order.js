@@ -28,8 +28,8 @@
     return CatalogAPI.formatMoney(catalog, amount);
   }
 
-  function categoryPrice(catId) {
-    const cat = catalog.categories.find((c) => c.id === catId);
+  function categoryPrice(catKeyOrId) {
+    const cat = catalog.categories.find((c) => c.key === catKeyOrId || c.id === catKeyOrId);
     if (!cat) return 0;
     if (selectedType === 'Sell Items') {
       return Math.round(cat.price * (catalog.pricing?.sellMultiplier ?? 0.8));
@@ -87,7 +87,7 @@
         <div class="chip-grid chip-grid-kits" id="detailOptions">
           ${catalog.kits.map(
             (k) => `
-              <button type="button" class="chip chip-lg" data-value="${k.id}">
+              <button type="button" class="chip chip-lg" data-value="${k.key || k.id}" data-label="${k.id.replace(/"/g, '&quot;')}">
                 <span class="chip-title">${k.id}</span>
                 <span class="chip-sub">${k.shortDesc}</span>
                 <span class="chip-price">${k.price > 0 ? formatPrice(k.price) : 'Quote'}</span>
@@ -106,7 +106,7 @@
           ${catalog.categories
             .map((c) => {
               const p = categoryPrice(c.id);
-              return `<button type="button" class="chip" data-value="${c.id}">
+              return `<button type="button" class="chip" data-value="${c.key || c.id}" data-label="${c.id.replace(/"/g, '&quot;')}">
                 <span class="chip-title">${c.id}</span>
                 <span class="chip-price">${formatPrice(p)}</span>
               </button>`;
@@ -169,14 +169,23 @@
 
     if (selectedType === 'Buy Items' || selectedType === 'Sell Items') {
       const custom = document.getElementById('customItem')?.value.trim();
-      const cats = [...selectedItems];
+      const cats = [...selectedItems].map((v) => {
+        const c = catalog.categories.find((cat) => cat.key === v || cat.id === v);
+        return c?.id || v;
+      });
       if (cats.length && custom) itemInput.value = `${cats.join(', ')} — ${custom}`;
       else if (cats.length) itemInput.value = cats.join(', ');
       else itemInput.value = custom || '';
       return;
     }
 
-    itemInput.value = selectedItems.size ? [...selectedItems][0] : '';
+    if (selectedItems.size) {
+      const v = [...selectedItems][0];
+      const kit = catalog.kits.find((k) => k.key === v || k.id === v);
+      itemInput.value = kit?.id || v;
+    } else {
+      itemInput.value = '';
+    }
   }
 
   function setOrderType(type) {

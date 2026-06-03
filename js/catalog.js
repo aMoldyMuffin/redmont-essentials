@@ -31,14 +31,18 @@
     let hasCustom = false;
 
     for (const part of parts) {
-      const kit = catalog.kits.find((k) => k.id === part || part.includes(k.id));
+      const kit = catalog.kits.find(
+        (k) => k.key === part || k.id === part || part.includes(k.id)
+      );
       if (kit) {
         if (kit.price <= 0) hasCustom = true;
         else total += kit.price;
         matched++;
         continue;
       }
-      const cat = catalog.categories.find((c) => c.id === part || part.includes(c.id));
+      const cat = catalog.categories.find(
+        (c) => c.key === part || c.id === part || part.includes(c.id)
+      );
       if (cat) {
         total += cat.price;
         matched++;

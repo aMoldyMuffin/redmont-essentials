@@ -14,9 +14,35 @@ function loadDefaultCatalog() {
   return JSON.parse(readFileSync(defaultPath, 'utf8'));
 }
 
+function slugBase(text) {
+  return (
+    String(text || 'item')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'item'
+  );
+}
+
+/** Discord select menus require unique option values — separate from display names. */
+function assignUniqueKeys(items, prefix) {
+  const seen = new Set();
+  return items.map((item, index) => {
+    let key = typeof item.key === 'string' ? item.key.trim() : '';
+    if (!key) key = `${prefix}-${slugBase(item.id)}-${index + 1}`;
+    let candidate = key;
+    let n = 2;
+    while (seen.has(candidate)) {
+      candidate = `${key}-${n++}`;
+    }
+    seen.add(candidate);
+    return { ...item, key: candidate };
+  });
+}
+
 function normalizeCatalog(catalog) {
   const defaults = loadDefaultCatalog();
-  if (!catalog || typeof catalog !== 'object') return defaults;
+  if (!catalog || typeof catalog !== 'object') return structuredClone(defaults);
 
   if (!Array.isArray(catalog.kits) || catalog.kits.length === 0) {
     catalog.kits = defaults.kits;
@@ -32,7 +58,18 @@ function normalizeCatalog(catalog) {
   if (!catalog.pricing) catalog.pricing = defaults.pricing;
   if (!catalog.currency) catalog.currency = defaults.currency;
 
+  catalog.kits = assignUniqueKeys(catalog.kits, 'kit');
+  catalog.categories = assignUniqueKeys(catalog.categories, 'cat');
+
   return catalog;
+}
+
+export function findKit(catalog, keyOrLabel) {
+  return catalog.kits.find((k) => k.key === keyOrLabel || k.id === keyOrLabel);
+}
+
+export function findCategory(catalog, keyOrLabel) {
+  return catalog.categories.find((c) => c.key === keyOrLabel || c.id === keyOrLabel);
 }
 
 export function getCatalog() {
@@ -85,7 +122,9 @@ export function calculateOrderPrice(catalog, orderType, itemText) {
   let hasCustom = false;
 
   for (const part of parts) {
-    const kit = catalog.kits.find((k) => k.id === part || part.includes(k.id));
+    const kit = catalog.kits.find(
+      (k) => k.key === part || k.id === part || part.includes(k.id)
+    );
     if (kit) {
       if (kit.price <= 0) hasCustom = true;
       else total += kit.price;
@@ -93,7 +132,9 @@ export function calculateOrderPrice(catalog, orderType, itemText) {
       continue;
     }
 
-    const cat = catalog.categories.find((c) => c.id === part || part.includes(c.id));
+    const cat = catalog.categories.find(
+      (c) => c.key === part || c.id === part || part.includes(c.id)
+    );
     if (cat) {
       total += cat.price;
       matched++;

@@ -8,7 +8,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import { getCatalog, calculateOrderPrice, formatMoney } from './catalog.js';
+import { getCatalog, calculateOrderPrice, formatMoney, findKit, findCategory } from './catalog.js';
 import { processWebsiteOrder } from './orders.js';
 
 const pendingOrders = new Map();
@@ -55,9 +55,9 @@ function buildKitSelect(catalog) {
       .setPlaceholder('Choose a gear kit')
       .addOptions(
         catalog.kits.map((k) => ({
-          label: k.id,
-          value: k.id,
-          description: `${formatMoney(catalog, k.price)} · ${k.shortDesc}`.slice(0, 100),
+          label: `${k.icon ? `${k.icon} ` : ''}${k.id}`.trim().slice(0, 100),
+          value: k.key,
+          description: `${formatMoney(catalog, k.price)} · ${k.shortDesc || ''}`.slice(0, 100),
         }))
       )
   );
@@ -77,8 +77,8 @@ function buildCategorySelect(catalog, orderType) {
             ? Math.round(c.price * (catalog.pricing?.sellMultiplier ?? 0.8))
             : c.price;
           return {
-            label: c.id,
-            value: c.id,
+            label: c.id.slice(0, 100),
+            value: c.key,
             description: formatMoney(catalog, price).slice(0, 100),
           };
         })
@@ -152,9 +152,9 @@ export async function handleDiscordOrderInteraction(interaction, client, ordersC
   }
 
   if (interaction.isStringSelectMenu() && interaction.customId === 'monty_order:kit') {
-    const kitId = interaction.values[0];
+    const kit = findKit(catalog, interaction.values[0]);
     const pending = pendingOrders.get(interaction.user.id) || { orderType: 'Gear Kit' };
-    pending.items = [kitId];
+    pending.items = [kit?.id || interaction.values[0]];
     pendingOrders.set(interaction.user.id, pending);
 
     await interaction.showModal(buildIgnModal());
@@ -167,7 +167,7 @@ export async function handleDiscordOrderInteraction(interaction, client, ordersC
       await interaction.reply({ content: 'Session expired — run `/order` again.', ephemeral: true });
       return true;
     }
-    pending.items = interaction.values;
+    pending.items = interaction.values.map((v) => findCategory(catalog, v)?.id || v);
     pendingOrders.set(interaction.user.id, pending);
 
     await interaction.showModal(buildIgnModal());
