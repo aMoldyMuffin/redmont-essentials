@@ -44,6 +44,16 @@ async function registerCommands() {
 
 client.once('ready', async () => {
   console.log(`Eleanor is online as ${client.user.tag}`);
+
+  try {
+    await registerCommands();
+  } catch (err) {
+    console.error(
+      'Slash command registration FAILED — commands will not appear in Discord.',
+      err?.rawError || err?.message || err
+    );
+  }
+
   client.user.setActivity('inventory & leaderboard', { type: ActivityType.Watching });
 
   if (apiSecret) {
@@ -158,6 +168,4 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-registerCommands()
-  .catch((err) => console.error('Command registration failed:', err))
-  .finally(() => client.login(token));
+client.login(token);

@@ -43,7 +43,16 @@ npm install
 | `ADMIN_SECRET` | Optional; defaults to `ELEANOR_API_SECRET` |
 | `DATABASE_PATH` | Optional; use `/data/eleanor.db` on Railway with a volume |
 
-If `ELEANOR_ROLE_IDS` is empty, only members with **Manage Messages** can adjust inventory.
+Slash commands are **visible to everyone** in the server; only members with `ELEANOR_ROLE_IDS` (or **Manage Messages**) can actually run them.
+
+### Commands not showing up?
+
+1. Type `/` and look under **Eleanor** (not Monty — they are separate bots).
+2. On re-invite, use OAuth scopes **`bot`** + **`applications.commands`**.
+3. Railway env: `DISCORD_CLIENT_ID` must be Eleanor’s **Application ID** (same app as the bot token).
+4. `DISCORD_GUILD_ID` must be your server ID.
+5. Redeploy Eleanor and check Railway logs for `Eleanor slash commands registered for guild...`
+6. If registration failed, the log will show the Discord error — fix that, redeploy, wait ~1 minute, restart Discord (Ctrl+R).
 
 ### 3. Run
 
