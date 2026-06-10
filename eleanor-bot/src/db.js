@@ -27,6 +27,14 @@ db.exec(`
     username TEXT NOT NULL,
     created_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS leaderboard (
+    user_id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    score INTEGER NOT NULL DEFAULT 0,
+    source TEXT NOT NULL DEFAULT 'manual',
+    updated_at INTEGER NOT NULL
+  );
 `);
 
 export default db;

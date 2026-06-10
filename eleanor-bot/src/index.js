@@ -4,17 +4,26 @@ import { registerGuildCommands } from './commands.js';
 import { startApiServer } from './api.js';
 import {
   buildLedgerEmbed,
-  formatQuantity,
   getInventory,
   postLedgerMessage,
   refreshLedgerMessage,
 } from './inventory.js';
 import { handleInventoryInteraction, isAuthorized } from './interactions.js';
+import {
+  ensureMemberOnLeaderboard,
+  refreshLeaderboardMessage,
+  syncLeaderboardFromRole,
+} from './leaderboard.js';
+import {
+  handleLeaderboardCommand,
+  handleLeaderboardInteraction,
+} from './leaderboard-interactions.js';
 
 const token = process.env.DISCORD_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
 const clientId = process.env.DISCORD_CLIENT_ID;
 const inventoryChannelId = process.env.INVENTORY_CHANNEL_ID;
+const leaderboardChannelId = process.env.LEADERBOARD_CHANNEL_ID;
 const apiPort = Number(process.env.PORT || process.env.API_PORT || 3848);
 const apiSecret = process.env.ELEANOR_API_SECRET;
 const adminSecret = process.env.ADMIN_SECRET || apiSecret;
@@ -25,7 +34,7 @@ if (!token || !guildId || !clientId) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 async function registerCommands() {
@@ -35,7 +44,7 @@ async function registerCommands() {
 
 client.once('ready', async () => {
   console.log(`Eleanor is online as ${client.user.tag}`);
-  client.user.setActivity('raw materials ledger', { type: ActivityType.Watching });
+  client.user.setActivity('inventory & leaderboard', { type: ActivityType.Watching });
 
   if (apiSecret) {
     startApiServer(client, { port: apiPort, secret: apiSecret, adminSecret });
@@ -54,12 +63,36 @@ client.once('ready', async () => {
       console.warn('Could not auto-post ledger:', err.message);
     }
   }
+
+  try {
+    const sync = await syncLeaderboardFromRole(client, guildId);
+    if (sync.ok && sync.added > 0) {
+      console.log(`Leaderboard: added ${sync.added} members from role on startup.`);
+    }
+    await refreshLeaderboardMessage(client);
+  } catch (err) {
+    console.warn('Leaderboard startup sync:', err.message);
+  }
+});
+
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  try {
+    const added = await ensureMemberOnLeaderboard(client, guildId, newMember);
+    if (added) {
+      console.log(`Leaderboard: auto-added ${newMember.user.username} (role granted).`);
+    }
+  } catch (err) {
+    console.warn('guildMemberUpdate leaderboard:', err.message);
+  }
 });
 
 client.on('interactionCreate', async (interaction) => {
   try {
-    const handled = await handleInventoryInteraction(interaction);
-    if (handled) return;
+    const handledInv = await handleInventoryInteraction(interaction);
+    if (handledInv) return;
+
+    const handledLb = await handleLeaderboardInteraction(interaction, client, guildId);
+    if (handledLb) return;
 
     if (!interaction.isChatInputCommand()) return;
 
@@ -101,6 +134,16 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [buildLedgerEmbed(getInventory())],
         ephemeral: true,
       });
+      return;
+    }
+
+    if (interaction.commandName === 'leaderboard') {
+      await handleLeaderboardCommand(
+        interaction,
+        client,
+        guildId,
+        leaderboardChannelId
+      );
     }
   } catch (err) {
     console.error('Eleanor interaction error:', err);
