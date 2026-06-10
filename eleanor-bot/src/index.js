@@ -48,10 +48,23 @@ client.once('ready', async () => {
   try {
     await registerCommands();
   } catch (err) {
+    const code = err?.code ?? err?.rawError?.code;
     console.error(
       'Slash command registration FAILED — commands will not appear in Discord.',
       err?.rawError || err?.message || err
     );
+    if (code === 20012) {
+      console.error(
+        'Fix: DISCORD_CLIENT_ID must be the Application ID for the SAME bot as DISCORD_TOKEN. ' +
+          'Open Eleanor in the Discord Developer Portal → General → Application ID. ' +
+          'Do not use Monty\'s client ID on Eleanor\'s Railway service.'
+      );
+    }
+    if (code === 50001 || err?.message?.includes('Missing Access')) {
+      console.error(
+        'Fix: Re-invite Eleanor with bot + applications.commands scopes, or check channel permissions.'
+      );
+    }
   }
 
   client.user.setActivity('inventory & leaderboard', { type: ActivityType.Watching });
@@ -82,6 +95,11 @@ client.once('ready', async () => {
     await refreshLeaderboardMessage(client);
   } catch (err) {
     console.warn('Leaderboard startup sync:', err.message);
+    if (err.message?.includes('Unknown Guild')) {
+      console.warn(
+        'Fix: DISCORD_GUILD_ID must be your server ID and Eleanor must be invited to that server.'
+      );
+    }
   }
 });
 

@@ -47,12 +47,29 @@ Slash commands are **visible to everyone** in the server; only members with `ELE
 
 ### Commands not showing up?
 
-1. Type `/` and look under **Eleanor** (not Monty — they are separate bots).
-2. On re-invite, use OAuth scopes **`bot`** + **`applications.commands`**.
-3. Railway env: `DISCORD_CLIENT_ID` must be Eleanor’s **Application ID** (same app as the bot token).
-4. `DISCORD_GUILD_ID` must be your server ID.
-5. Redeploy Eleanor and check Railway logs for `Eleanor slash commands registered for guild...`
-6. If registration failed, the log will show the Discord error — fix that, redeploy, wait ~1 minute, restart Discord (Ctrl+R).
+**Error `20012` / "not authorized to perform this action on this application"**
+
+Your Railway `DISCORD_CLIENT_ID` does **not** match `DISCORD_TOKEN`. This often happens when Monty’s Application ID was copied onto Eleanor’s service.
+
+1. [Discord Developer Portal](https://discord.com/developers/applications) → open **Eleanor** (not Monty)
+2. **General → Application ID** → paste into Railway `DISCORD_CLIENT_ID`
+3. **Bot → Reset Token** (if unsure) → paste into Railway `DISCORD_TOKEN`
+4. Redeploy Eleanor
+
+**Error `Unknown Guild`**
+
+`DISCORD_GUILD_ID` is wrong, or Eleanor was never invited to that server. Copy your server ID (right‑click server icon → Copy Server ID) and re-invite Eleanor.
+
+**Error `Missing Access` on ledger**
+
+Eleanor cannot see `INVENTORY_CHANNEL_ID`. Re-invite with **View Channels**, **Send Messages**, **Embed Links**, **Read Message History**, or move the channel so Eleanor’s role can access it.
+
+**General checklist**
+
+1. Type `/` and look under **Eleanor** (not Monty).
+2. Re-invite URL must include scopes **`bot`** + **`applications.commands`**.
+3. Logs should show: `Eleanor slash commands registered for guild...`
+4. Wait ~1 minute after deploy, then refresh Discord (Ctrl+R).
 
 ### 3. Run
 
