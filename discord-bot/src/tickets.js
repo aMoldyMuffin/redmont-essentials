@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import { getOrder, setOrderTicketChannel, clearOrderTicketChannel } from './db.js';
 import { resolveDiscordUserId } from './notifications.js';
+import { isTicketLoggingEnabled, logTicketClosed, logTicketOpened } from './ticket-log.js';
 
 function ticketCategoryId() {
   return process.env.TICKET_CATEGORY_ID?.trim() || null;
@@ -129,6 +130,12 @@ export async function createOrderTicket(client, guildId, order, staffUser) {
     });
   }
 
+  if (isTicketLoggingEnabled()) {
+    logTicketOpened(client, order, staffUser, channel).catch((err) =>
+      console.warn('Ticket open log failed:', err.message)
+    );
+  }
+
   return { channel, customerId, existing: false };
 }
 
@@ -170,8 +177,19 @@ export async function closeOrderTicketChannel(interaction, orderId) {
   }
 
   await interaction.reply({ content: '🔒 Closing ticket…' });
+
+  const ticketChannel = interaction.channel;
+
+  if (isTicketLoggingEnabled()) {
+    try {
+      await logTicketClosed(interaction.client, order, ticketChannel, interaction.user);
+    } catch (err) {
+      console.warn('Ticket close log / transcript failed:', err.message);
+    }
+  }
+
   clearOrderTicketChannel(orderId);
-  await interaction.channel.delete().catch((err) => {
+  await ticketChannel.delete().catch((err) => {
     console.warn('Could not delete ticket channel:', err.message);
   });
 }

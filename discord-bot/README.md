@@ -6,6 +6,7 @@
 
 - Website orders post to your Discord orders channel
 - **Claim Order** button for staff → optional **private ticket channel** per order (Tickety-style)
+- **Transcripts & bot log** — HTML transcript on close + open/close events in a staff log channel
 - **Weighted points** — harder items = more leaderboard points
 - `/leaderboard` — top staff by points
 - `/mystats` — your claim stats
@@ -35,6 +36,8 @@ Fill in:
 - `ORDERS_CHANNEL_ID` — right-click your `#website-orders` channel → Copy ID
 - `STAFF_ROLE_ID` — role that can claim orders (optional if staff have Manage Messages)
 - `TICKET_CATEGORY_ID` — category for private order tickets when staff claim (optional)
+- `BOT_LOG_CHANNEL_ID` — staff channel for ticket opened/closed events (optional)
+- `TRANSCRIPT_CHANNEL_ID` — channel for HTML transcripts on close (optional; defaults to bot log channel)
 - `MONTY_API_SECRET` — long random string (e.g. `openssl rand -hex 32`)
 - `ADMIN_SECRET` — optional; for `/admin.html` catalog editor (defaults to `MONTY_API_SECRET`)
 - `WEBSITE_URL` — your Cloudflare Pages URL
@@ -116,5 +119,17 @@ Restart Monty after changing weights.
 4. Monty needs **Manage Channels** and **View Channel** in that category.
 
 Customers must use a Discord username that matches someone **in your server** (or mention format from `/order`) so Monty can add them to the channel.
+
+### Transcripts & bot log (Tickety-style)
+
+When tickets are enabled, you can log activity like Tickety:
+
+1. Create `#ticket-logs` (staff-only) and optionally `#transcripts` (staff-only).
+2. On Railway, set:
+   - **`BOT_LOG_CHANNEL_ID`** — Monty posts when a ticket **opens** or **closes**
+   - **`TRANSCRIPT_CHANNEL_ID`** — Monty posts an **HTML transcript** when a ticket closes (if omitted, transcripts go to the bot log channel)
+3. Monty needs **Send Messages**, **Embed Links**, and **Attach Files** in those channels.
+
+On close, Monty saves every message from the ticket channel into a downloadable `.html` file before deleting the channel.
 
 Points = sum of item weights from `config/weights.json`.
